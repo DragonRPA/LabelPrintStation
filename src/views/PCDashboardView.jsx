@@ -22,6 +22,7 @@ import RPADashboardTab from './RPADashboardTab';
 import RPABuilderTab from './RPABuilderTab';
 import AdminGatekeeperModal from '../components/AdminGatekeeperModal';
 import DocViewerModal from '../components/DocViewerModal';
+import { isAdminAuthenticated, lockAdminSession } from '../utils/adminAuth';
 import { getDbClient } from '../utils/dbClient';
 
 const STATUS_MAP = {
