@@ -1,0 +1,8 @@
+{
+  "version": "v1.6",
+  "downloadUrl": "https://dragonrpa.github.io/LabelPrintStation/UBUS_DragonRPA_Agent.exe",
+  "backupUrl": "https://raw.githubusercontent.com/DragonRPA/LabelPrintStation/main/print-agent/dist/UBUS_DragonRPA_Agent.exe",
+  "releaseDate": "2026-08-23",
+  "minRequiredVersion": "v1.6",
+  "releaseNotes": "Neon PostgreSQL 및 LabelPrintStation 서비스 연동 완료"
+}
