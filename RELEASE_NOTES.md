@@ -1,5 +1,17 @@
 # 릴리즈 노트 (RELEASE_NOTES.md)
 
+## [v1.8.0.Build.2] - 2026-08-23 15:05:00 (KST)
+
+### 🐛 [PCDashboardView 임포트 복구 및 렌더링 에러 해결]
+
+1. **`PCDashboardView.jsx` 관리자 인증 함수(`isAdminAuthenticated`) 임포트 복구**:
+   - Supabase 클라이언트 교체 과정에서 누락되었던 `import { isAdminAuthenticated, lockAdminSession }` 재선언
+   - 시스템 복구 에러 화면(`isAdminAuthenticated is not defined`) 완벽 제거 및 정상 대시보드 복구
+2. **GitHub Pages 즉시 배포 완료**:
+   - 최신 번들 빌드 및 배포(`Published`) 완료
+
+---
+
 ## [v1.8.0.Build.1] - 2026-08-23 14:46:00 (KST)
 
 ### 🚀 [Neon Serverless PostgreSQL 전면 이전 & LabelPrintStation 신규 레포지토리 전환]
