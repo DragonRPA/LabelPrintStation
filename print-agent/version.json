@@ -1,8 +1,8 @@
 {
-  "version": "v1.5",
-  "downloadUrl": "https://dragonrpa.github.io/ImageScan/UBUS_DragonRPA_Agent.exe",
-  "backupUrl": "https://raw.githubusercontent.com/DragonRPA/ImageScan/main/print-agent/dist/UBUS_DragonRPA_Agent.exe",
-  "releaseDate": "2026-08-16",
-  "minRequiredVersion": "v1.5",
-  "releaseNotes": "Microsoft Playwright & CDP 실시간 객체 스캐너 및 통합 하이브리드 RPA 실행 엔진 탑재"
+  "version": "v1.6",
+  "downloadUrl": "https://dragonrpa.github.io/LabelPrintStation/UBUS_DragonRPA_Agent.exe",
+  "backupUrl": "https://raw.githubusercontent.com/DragonRPA/LabelPrintStation/main/print-agent/dist/UBUS_DragonRPA_Agent.exe",
+  "releaseDate": "2026-08-23",
+  "minRequiredVersion": "v1.6",
+  "releaseNotes": "Neon PostgreSQL 및 LabelPrintStation 서비스 연동 완료"
 }

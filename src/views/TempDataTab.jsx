@@ -17,8 +17,7 @@ import {
   X,
   Database
 } from 'lucide-react';
-import * as XLSX from 'xlsx';
-import { getSupabaseClient } from '../utils/supabaseClient';
+import { getDbClient } from '../utils/dbClient';
 import {
   fetchTableSchema,
   getTableSchema,
@@ -112,7 +111,7 @@ export default function TempDataTab({ onError, onOpenPrintModal }) {
     setStatusMessage(null);
     setCellSelection(null);
     try {
-      const client = getSupabaseClient();
+      const client = getDbClient();
       if (client) {
         let allData = [];
         let from = 0;
@@ -318,7 +317,7 @@ export default function TempDataTab({ onError, onOpenPrintModal }) {
 
     // ⭐️ Supabase 온라인 DB 동기화 (전사 표준 헌장: 무음 실패 방지)
     try {
-      const client = getSupabaseClient();
+      const client = getDbClient();
       if (client) {
         const dbRow = normalizeRowForDb(payload, keyField);
         const { data: savedData, error: saveErr } = await client.from('temp_asset').upsert(dbRow).select();
@@ -360,7 +359,7 @@ export default function TempDataTab({ onError, onOpenPrintModal }) {
     localStorage.setItem(LOCAL_KEY_TEMP_ASSETS, JSON.stringify(updated));
 
     try {
-      const client = getSupabaseClient();
+      const client = getDbClient();
       if (client) {
         if (item.id && /^[0-9a-f-]{36}$/i.test(item.id)) {
           await client.from('temp_asset').delete().eq('id', item.id);
@@ -382,7 +381,7 @@ export default function TempDataTab({ onError, onOpenPrintModal }) {
     localStorage.removeItem(LOCAL_KEY_TEMP_ASSETS);
 
     try {
-      const client = getSupabaseClient();
+      const client = getDbClient();
       if (client) {
         await client.from('temp_asset').delete().neq('id', '00000000-0000-0000-0000-000000000000');
       }
@@ -482,9 +481,9 @@ export default function TempDataTab({ onError, onOpenPrintModal }) {
         }
 
         // ⭐️ 3. 기존 DB temp_asset 테이블의 모든 기존 데이터 완전 삭제 (최종 데이터로 교체 적재)
-        const client = getSupabaseClient();
+        const client = getDbClient();
         if (!client) {
-          throw new Error('Supabase 데이터베이스 클라이언트 연결 객체를 생성할 수 없습니다. DB 설정을 확인하세요.');
+          throw new Error('데이터베이스 클라이언트 연결 객체를 생성할 수 없습니다. DB 설정을 확인하세요.');
         }
 
         const { error: delErr } = await client
@@ -494,9 +493,7 @@ export default function TempDataTab({ onError, onOpenPrintModal }) {
 
         if (delErr) {
           console.error('기존 DB 삭제 오류:', delErr);
-          const detail = delErr.code === '42501'
-            ? 'DB 삭제 권한이 부족합니다 (Supabase RLS Policy를 확인하세요).'
-            : delErr.message;
+          const detail = delErr.message;
           throw new Error(`기존 데이터 초기화 실패: ${detail}`);
         }
 
@@ -510,12 +507,11 @@ export default function TempDataTab({ onError, onOpenPrintModal }) {
 
           const { error: chunkErr } = await client.from('temp_asset').insert(chunk);
           if (chunkErr) {
-            console.error('Supabase 벌크 주입 오류:', chunkErr);
+            console.error('DB 벌크 주입 오류:', chunkErr);
             let detail = chunkErr.message;
             if (chunkErr.code === '23505') detail = `중복된 고유 키(PK)가 존재합니다 (${chunkErr.details || chunkErr.message})`;
             else if (chunkErr.code === '42703') detail = `DB 테이블에 존재하지 않는 컬럼이 포함되었습니다 (${chunkErr.message})`;
             else if (chunkErr.code === '22001') detail = `데이터 길이가 DB 컬럼 허용 길이를 초과했습니다 (${chunkErr.message})`;
-            else if (chunkErr.code === '42501') detail = `DB INSERT 권한(RLS)이 없습니다 (${chunkErr.message})`;
 
             throw new Error(`DB 벌크 저장 실패 (청크 ${chunkIndex}/${totalChunks}, 행 ${i + 1}~${i + chunk.length}): ${detail}`);
           }
@@ -526,7 +522,7 @@ export default function TempDataTab({ onError, onOpenPrintModal }) {
 
         setStatusMessage({
           type: 'success',
-          text: `엑셀에서 ${parsedRows.length}건의 데이터를 Supabase DB에 성공적으로 업로드 및 반영하였습니다!`
+          text: `엑셀에서 ${parsedRows.length}건의 데이터를 DB에 성공적으로 업로드 및 반영하였습니다!`
         });
         setTimeout(() => setStatusMessage(null), 4000);
       } catch (err) {
@@ -712,7 +708,7 @@ export default function TempDataTab({ onError, onOpenPrintModal }) {
               alignItems: 'center',
               gap: '4px'
             }}
-            title="Supabase 실제 DB에서 최신 데이터 전수 조회"
+            title="실제 DB에서 최신 데이터 전수 조회"
           >
             <Search size={12} className={isLoading ? 'animate-spin' : ''} /> DB 조회
           </button>

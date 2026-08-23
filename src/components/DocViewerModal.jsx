@@ -28,7 +28,7 @@ const MANUAL_CONTENT = `# 📖 [기능 매뉴얼] UBUS DragonRPA & 통합 자산
 
 1. 빠른 시작
 - print-agent/dist/ [에이전트실행.bat] 더블클릭 실행
-- 웹 브라우저 접속 (http://localhost:5173/ImageScan/)
+- 웹 브라우저 접속 (http://localhost:5173/LabelPrintStation/)
 
 2. 라벨 인쇄 및 블루투스 스캐너
 - 화면 포커스 무관(Zero-Focus), 블루투스 스캐너로 자산번호/시리얼 바코드 스캔 즉시 1초 라벨 자동 출력

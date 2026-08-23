@@ -13,11 +13,11 @@ import {
   SlidersHorizontal
 } from 'lucide-react';
 import {
-  fetchScansFromSupabase,
+  fetchScansFromDb,
   subscribeRealtimeScans,
-  deleteScanFromSupabase,
-  deleteAllScansFromSupabase
-} from '../utils/supabaseClient';
+  deleteScanFromDb,
+  deleteAllScansFromDb
+} from '../utils/dbClient';
 
 // ── 15대 표준 컬럼 순서 (엑셀 셀 범위 선택 및 복사용) ───────────────────
 const COLUMN_KEYS = [
@@ -78,7 +78,7 @@ export default function PCDashboard({
     setLoading(true);
     setCellSelection(null);
     try {
-      const data = await fetchScansFromSupabase({ category_major: 'IT' });
+      const data = await fetchScansFromDb({ category_major: 'IT' });
       setItems(data || []);
     } catch (err) {
       console.warn('데이터 로드 경고:', err);
@@ -100,7 +100,7 @@ export default function PCDashboard({
         asset_status: filterStatus,
         searchGeneral: searchGeneral
       };
-      const data = await fetchScansFromSupabase(filters);
+      const data = await fetchScansFromDb(filters);
       setItems(data || []);
       setSelectedIds([]);
     } catch (err) {
@@ -375,7 +375,7 @@ export default function PCDashboard({
 
     try {
       for (const id of selectedIds) {
-        await deleteScanFromSupabase(id);
+        await deleteScanFromDb(id);
       }
       setItems((prev) => prev.filter((item) => !selectedIds.includes(item.id || item.asset_no)));
       setSelectedIds([]);

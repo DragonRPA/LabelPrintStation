@@ -5,12 +5,12 @@ import PCDashboardView from './views/PCDashboardView';
 import FileExportModal from './components/FileExportModal';
 import LabelPrintModal from './components/LabelPrintModal';
 import DataImportModal from './components/DataImportModal';
-import SupabaseConfigModal from './components/SupabaseConfigModal';
+import NeonConfigModal from './components/NeonConfigModal';
 import PrinterGuideModal from './components/PrinterGuideModal';
 import AgentUpdateModal from './components/AgentUpdateModal';
 import AgentShutdownButton from './components/AgentShutdownButton';
 import ErrorModal from './components/ErrorModal';
-import { getStoredConfig } from './utils/supabaseClient';
+import { getStoredConfig } from './utils/dbClient';
 import { initHardwareScannerListener } from './utils/hardwareScanner';
 import { checkAgentLiveStatus } from './utils/agentUpdateManager';
 
@@ -74,7 +74,7 @@ export default function App() {
   // 보안인증서 원클릭 설치 배치파일 다운로드
   const handleDownloadCertInstaller = () => {
     const link = document.createElement('a');
-    link.href = 'https://dragonrpa.github.io/ImageScan/보안인증서_원클릭설치.bat';
+    link.href = 'https://dragonrpa.github.io/LabelPrintStation/보안인증서_원클릭설치.bat';
     link.download = '보안인증서_원클릭설치.bat';
     document.body.appendChild(link);
     link.click();
@@ -158,7 +158,10 @@ export default function App() {
                 ? `에이전트 업데이트 (${agentStatus.version} ➔ ${agentStatus.requiredVersion})`
                 : (agentStatus?.online ? `에이전트 ${agentStatus.version}` : '에이전트 미실행')}
             </button>
-            <AgentShutdownButton onShutdown={() => console.log('Agent stopped')} />
+            <AgentShutdownButton
+              onShutdown={() => setAgentStatus(prev => ({ ...prev, online: false }))}
+              isOnline={!!agentStatus?.online}
+            />
 
             {/* 보안인증서 1클릭 설치 버튼 (스마트업데이트 버튼 바로 옆 배치) */}
             <button
@@ -272,10 +275,10 @@ export default function App() {
         onClose={() => setErrorMessage(null)}
       />
 
-      <SupabaseConfigModal
+      <NeonConfigModal
         isOpen={isConfigOpen}
         onClose={() => setIsConfigOpen(false)}
-        onSaveSuccess={() => alert('Supabase 연동 정보가 정상 등록되었습니다.')}
+        onSaveSuccess={() => alert('DB 연동 정보가 정상 등록되었습니다.')}
       />
 
       <PrinterGuideModal

@@ -2,7 +2,7 @@
  * Hardware / Bluetooth Barcode Scanner Global Interceptor Engine
  * System: Zero-Focus Fast Barcode Burst Interceptor & Instant ZPL Queue Pipeline
  */
-import { getSupabaseClient } from './supabaseClient';
+import { getDbClient } from './dbClient';
 import { getStoredLabelTemplate, generateDynamicZpl } from './labelTemplate';
 import { triggerSuccessFeedback } from './soundFeedback';
 
@@ -66,7 +66,7 @@ export function initHardwareScannerListener({ onScanResult, onAutoPrintSuccess, 
 async function handleInstantBarcodeProcess(code, { onScanResult, onAutoPrintSuccess, onError }) {
   try {
     triggerSuccessFeedback();
-    const client = getSupabaseClient();
+    const client = getDbClient();
     let matchedItem = {
       asset_no: code,
       serial_no: code,

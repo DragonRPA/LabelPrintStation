@@ -1,5 +1,24 @@
 # 릴리즈 노트 (RELEASE_NOTES.md)
 
+## [v1.8.0.Build.1] - 2026-08-23 14:46:00 (KST)
+
+### 🚀 [Neon Serverless PostgreSQL 전면 이전 & LabelPrintStation 신규 레포지토리 전환]
+
+1. **Neon Serverless PostgreSQL 7대 핵심 테이블 구축 및 100% 무손실 마이그레이션**:
+   - `asset` (자산 마스터 16,472건), `temp_asset` (임시 자산 45건), `label_templates` (라벨 서식 4건), `print_queue` (대기열 18건), `schema_definitions` (동적 스키마 1건), `rpa_scenarios`, `scan_records` 완벽 구축
+   - Supabase 원본 데이터와 1:1 전수 무결성 검수 완료
+2. **코드 전반 Supabase 잔재 전면 박멸 (Zero Supabase Footprint)**:
+   - `@neondatabase/serverless` 기반 `dbClient.js` & `neonClient.js` 구축
+   - Supabase 하드코딩 URL, API Key, UI 텍스트, 에러 메시지 100% 정리
+   - `SupabaseConfigModal` ➔ `NeonConfigModal` 전환
+3. **프로젝트 경로 및 Git 레포지토리 이전 완결**:
+   - 새 원격 저장소: `https://github.com/DragonRPA/LabelPrintStation.git`
+   - `package.json`, `vite.config.js` (`base: '/LabelPrintStation/'`), 에이전트 자가 업데이트 URL 일괄 최신화
+4. **C# Native 에이전트(`UBUS_DragonRPA_Agent.exe`) 재컴파일 및 배포 완료**:
+   - CP949 한국어 완성형 인코딩 탑재, 확실한 즉시 프로세스 종료(`/api/agent/shutdown`) 탑재, DB 상태 응답(`db:ok`) 최신화
+
+---
+
 ## [v1.7.0.Build.49] - 2026-08-19 13:51:00 (KST)
 
 ### 🔄 [C# Native 에이전트 스마트 자가 업데이트 4단계 파이프라인 & 최신 통합 바이너리 배포]

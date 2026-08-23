@@ -2,7 +2,7 @@
  * Admin Passcode & Gatekeeper Authentication Engine
  * System: Security Gatekeeper for Schema Builder & RPA Scenario Editor
  */
-import { getSupabaseClient } from './supabaseClient';
+import { getDbClient } from './dbClient';
 
 export const LOCAL_KEY_ADMIN_PASSCODE = 'IMAGE_SCAN_ADMIN_PASSCODE_V1';
 export const SESSION_KEY_ADMIN_AUTH = 'IMAGE_SCAN_IS_ADMIN_SESSION_V1';
@@ -63,8 +63,8 @@ export async function updateAdminPasscode(oldPasscode, newPasscode) {
     localStorage.setItem(LOCAL_KEY_ADMIN_PASSCODE, cleanNew);
     sessionStorage.setItem(SESSION_KEY_ADMIN_AUTH, 'true');
 
-    // Supabase 동기화 (옵션)
-    const client = getSupabaseClient();
+    // DB 동기화
+    const client = getDbClient();
     if (client) {
       await client.from('schema_definitions').upsert({
         id: 'admin_security_config',

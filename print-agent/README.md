@@ -111,7 +111,7 @@ Windows 시작프로그램 폴더(`shell:startup`)에 넣으세요.
 
 ```batch
 @echo off
-cd /d "D:\GoogleDrive\RPA 개발\01.AntiGravity\ImageScan\print-agent"
+cd /d "D:\GoogleDrive\RPA_dev\01.AntiGravity\LabelPrintStation\print-agent"
 node zebra-agent.mjs >> agent.log 2>&1
 ```
 

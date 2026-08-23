@@ -4,7 +4,7 @@ import react from '@vitejs/plugin-react'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
-  base: '/ImageScan/',
+  base: '/LabelPrintStation/',
   server: {
     watch: {
       ignored: ['**/print-agent/**', '**/*.exe', '**/*.zpl', '**/*.ps1']

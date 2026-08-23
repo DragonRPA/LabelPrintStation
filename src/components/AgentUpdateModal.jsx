@@ -108,7 +108,7 @@ export default function AgentUpdateModal({ isOpen, onClose, agentStatus, onUpdat
                 윈도우 스마트스크린/보안 차단 발생 시:
               </span>
               <a
-                href="https://dragonrpa.github.io/ImageScan/보안인증서_원클릭설치.bat"
+                href="https://dragonrpa.github.io/LabelPrintStation/보안인증서_원클릭설치.bat"
                 download="보안인증서_원클릭설치.bat"
                 className="btn btn-outline"
                 style={{ fontSize: '0.72rem', padding: '2px 8px', color: '#38bdf8', borderColor: '#38bdf8', textDecoration: 'none' }}

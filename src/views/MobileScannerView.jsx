@@ -2,7 +2,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import { Camera, UploadCloud, Play, Square, Plus, Volume2, ShieldCheck, Target, Zap, ZapOff, RefreshCw, Smartphone, Eye, Mic, MicOff, CheckCircle, Search, Database, Layers, CheckSquare } from 'lucide-react';
 import { getTesseractWorker, preprocessCanvasROI, parseFieldsFromTesseractResult } from '../utils/ocrWorker';
 import { triggerSuccessFeedback } from '../utils/soundFeedback';
-import { saveScansToSupabase, getStoredConfig, fetchScansFromSupabase, insertPrintQueue } from '../utils/supabaseClient';
+import { saveScansToDb, getStoredConfig, fetchScansFromDb, insertPrintQueue } from '../utils/dbClient';
 import { isSpeechRecognitionSupported, createSpeechRecognizer, convertKoreanSpeechToDigits } from '../utils/speechRecognition';
 
 export default function MobileScannerView({ onError, onOpenConfigModal }) {
@@ -43,8 +43,8 @@ export default function MobileScannerView({ onError, onOpenConfigModal }) {
   const [lastScannedImei, setLastScannedImei] = useState('');
   const [isSaving, setIsSaving] = useState(false);
 
-  const supabaseConfig = getStoredConfig();
-  const isConfigured = Boolean(supabaseConfig.url && supabaseConfig.anonKey && !supabaseConfig.url.includes('your-supabase-project'));
+  const dbConfig = getStoredConfig();
+  const isConfigured = Boolean(dbConfig.url && !dbConfig.url.includes('your-neon-project') && !dbConfig.url.includes('your-supabase-project'));
 
   // Sync ref with isVoiceOn state
   useEffect(() => {
@@ -55,7 +55,7 @@ export default function MobileScannerView({ onError, onOpenConfigModal }) {
   useEffect(() => {
     async function loadMasterData() {
       try {
-        const dbData = await fetchScansFromSupabase();
+        const dbData = await fetchScansFromDb();
         if (dbData && dbData.length > 0) {
           setMasterDbItems(dbData);
         }
@@ -375,16 +375,16 @@ export default function MobileScannerView({ onError, onOpenConfigModal }) {
 
     // ── DB 저장 + 프린트 큐 등록 (isConfigured 무관하게 항상 시도) ──────────
     const cfg = getStoredConfig();
-    const dbReady = Boolean(cfg.url && cfg.anonKey && !cfg.url.includes('your-supabase-project'));
+    const dbReady = Boolean(cfg.url && !cfg.url.includes('your-neon-project') && !cfg.url.includes('your-supabase-project'));
 
     if (dbReady) {
-      // 1) imei_scans 저장
+      // 1) 자산 DB 저장
       try {
-        await saveScansToSupabase([newItem]);
+        await saveScansToDb([newItem]);
         newItem.status = 'EXPORTED';
       } catch (e) {
-        console.error('[imei_scans] 저장 실패:', e);
-        setOcrStatus(`⚠️ imei_scans 저장 실패: ${e.message}`);
+        console.error('[DB] 저장 실패:', e);
+        setOcrStatus(`⚠️ DB 저장 실패: ${e.message}`);
         return;
       }
 
@@ -404,7 +404,7 @@ export default function MobileScannerView({ onError, onOpenConfigModal }) {
       }
     } else {
       // DB 미연결 상태 - 로컬만 저장
-      setOcrStatus(`⚠️ DB 미연결 (로컬 저장만). URL: ${cfg.url?.slice(0,30) ?? '없음'}`);
+      setOcrStatus(`⚠️ DB 미연결 (로컬 저장만).`);
     }
   };
 
@@ -429,7 +429,7 @@ export default function MobileScannerView({ onError, onOpenConfigModal }) {
     handleAutoSaveFrom4Digits(fourDigits, matchedRecord);
   };
 
-  // Export Scans to Supabase DB
+  // Export Scans to DB
   const handleExportAll = async () => {
     if (scannedItems.length === 0) {
       if (onError) onError('내보낼 스캔 데이터가 없습니다.');
@@ -438,11 +438,11 @@ export default function MobileScannerView({ onError, onOpenConfigModal }) {
 
     setIsSaving(true);
     try {
-      await saveScansToSupabase(scannedItems);
+      await saveScansToDb(scannedItems);
       setScannedItems(prev => prev.map(item => ({ ...item, status: 'EXPORTED' })));
-      alert(`성공적으로 ${scannedItems.length}건의 데이터를 Supabase DB에 저장하였습니다! (PC 라벨 동기화)`);
+      alert(`성공적으로 ${scannedItems.length}건의 데이터를 DB에 저장하였습니다! (PC 라벨 동기화)`);
     } catch (err) {
-      if (onError) onError(err.message || 'Supabase 저장 중 오류가 발생했습니다.');
+      if (onError) onError(err.message || 'DB 저장 중 오류가 발생했습니다.');
     } finally {
       setIsSaving(false);
     }

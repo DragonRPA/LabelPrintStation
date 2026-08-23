@@ -1,9 +1,9 @@
 {
-  "name": "temp-app",
+  "name": "label-print-station",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.7.0",
   "type": "module",
-  "homepage": "https://DragonRPA.github.io/ImageScan",
+  "homepage": "https://DragonRPA.github.io/LabelPrintStation",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -13,6 +13,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@neondatabase/serverless": "^1.1.0",
     "@supabase/supabase-js": "^2.112.3",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",

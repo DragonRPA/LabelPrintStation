@@ -1256,7 +1256,7 @@ function startUiServer() {
       let body = '';
       req.on('data', c => body += c);
       await new Promise(r => req.on('end', r));
-      let updateUrl = 'https://raw.githubusercontent.com/DragonRPA/ImageScan/main/print-agent/dist/UBUS_DragonRPA_Agent.exe';
+      let updateUrl = 'https://raw.githubusercontent.com/DragonRPA/LabelPrintStation/main/print-agent/dist/UBUS_DragonRPA_Agent.exe';
       try {
         if (body) {
           const parsed = JSON.parse(body);
@@ -1452,7 +1452,7 @@ del "%~f0"
 }
 
 // ── [프론트엔드 웹 URL 및 콘솔 윈도우 제어] ─────────────────────────────────
-const FRONTEND_URL = 'https://dragonrpa.github.io/ImageScan/';
+const FRONTEND_URL = 'https://dragonrpa.github.io/LabelPrintStation/';
 
 function openFrontendInBrowser() {
   try {

@@ -22,9 +22,7 @@ import RPADashboardTab from './RPADashboardTab';
 import RPABuilderTab from './RPABuilderTab';
 import AdminGatekeeperModal from '../components/AdminGatekeeperModal';
 import DocViewerModal from '../components/DocViewerModal';
-import { isAdminAuthenticated, lockAdminSession } from '../utils/adminAuth';
-import { generateZplCode, sendZplToWebSerial } from '../utils/zplPrinter';
-import { getSupabaseClient } from '../utils/supabaseClient';
+import { getDbClient } from '../utils/dbClient';
 
 const STATUS_MAP = {
   PENDING:  { label: '대기중',    color: '#f59e0b', bg: '#451a03' },
@@ -41,7 +39,7 @@ function PrintQueueMonitor() {
   const channelRef = useRef(null);
 
   const loadQueueData = async () => {
-    const client = getSupabaseClient();
+    const client = getDbClient();
     if (!client) { setIsLoading(false); return; }
 
     const { data, error } = await client
@@ -64,8 +62,8 @@ function PrintQueueMonitor() {
   };
 const clearQueue = async () => {
   if (!window.confirm('큐를 모두 삭제하시겠습니까?')) return;
-  const client = getSupabaseClient();
-  if (!client) { alert('Supabase 클라이언트 없음'); return; }
+  const client = getDbClient();
+  if (!client) { alert('DB 클라이언트 없음'); return; }
   const { error } = await client.from('print_queue').delete().neq('id', '00000000-0000-0000-0000-000000000000');
   if (error) { console.error(error); alert('프린트 큐 삭제 실패'); }
   else { alert('프린트 큐 삭제 완료'); loadQueueData(); }
@@ -74,7 +72,7 @@ const clearQueue = async () => {
   useEffect(() => {
     loadQueueData();
 
-    const client = getSupabaseClient();
+    const client = getDbClient();
     if (!client) return;
 
     const channel = client

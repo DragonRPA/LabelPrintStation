@@ -2,7 +2,7 @@
  * Universal Dynamic Schema & Record Engine (SSOT)
  * System: Universal Dynamic Schema, Scan Queue & Label Pipeline
  */
-import { getSupabaseClient } from './supabaseClient.js';
+import { getDbClient } from './dbClient.js';
 
 export const LOCAL_KEY_SCHEMA_DEF = 'IMAGE_SCAN_UNIVERSAL_SCHEMA_DEF_V1';
 
@@ -297,7 +297,7 @@ export function getTableSchema(tableId = 'asset') {
 export async function fetchTableSchema(tableId = 'temp_asset') {
   const localKey = tableId === 'temp_asset' ? LOCAL_KEY_TEMP_ASSET_SCHEMA : LOCAL_KEY_SCHEMA_DEF;
 
-  const client = getSupabaseClient();
+  const client = getDbClient();
   if (!client) return getTableSchema(tableId);
 
   try {
@@ -369,7 +369,7 @@ export async function saveTableSchema(tableId, schemaDef) {
     localStorage.setItem(localKey, JSON.stringify(normalized));
   } catch (e) {}
 
-  const client = getSupabaseClient();
+  const client = getDbClient();
   if (!client) return { success: true, message: '로컬 스키마 저장 완료' };
 
   try {
@@ -406,7 +406,7 @@ export function getLocalSchemaDef() {
  * DDL 스키마 패치 실행 (Supabase RPC 및 테이블 동기화)
  */
 export async function applySchemaPatch(schemaDef, resetData = false) {
-  const client = getSupabaseClient();
+  const client = getDbClient();
   saveLocalSchemaDef(schemaDef);
 
   if (!client) {
@@ -464,7 +464,7 @@ export async function applySchemaPatch(schemaDef, resetData = false) {
  * 동적 레코드 전체 목록 조회 (scan_records)
  */
 export async function fetchScanRecords(limit = 500) {
-  const client = getSupabaseClient();
+  const client = getDbClient();
   if (!client) return [];
 
   try {
@@ -516,8 +516,8 @@ export async function fetchScanRecords(limit = 500) {
  * 동적 레코드 단건 저장 (모바일 스캐너 및 수기 입력)
  */
 export async function saveScanRecord(keyValue, recordData, status = 'SCANNED') {
-  const client = getSupabaseClient();
-  if (!client) throw new Error('Supabase 클라이언트가 초기화되지 않았습니다.');
+  const client = getDbClient();
+  if (!client) throw new Error('DB 클라이언트가 초기화되지 않았습니다.');
   if (!keyValue) throw new Error('키 인덱스 값이 필요합니다.');
 
   const payload = {

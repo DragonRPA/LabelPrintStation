@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Upload, FileSpreadsheet, AlertTriangle, CheckCircle, RefreshCw, X, Download, Loader2, CheckCircle2 } from 'lucide-react';
 import * as XLSX from 'xlsx';
-import { saveScansToSupabaseBatch, getSupabaseClient } from '../utils/supabaseClient';
+import { saveScansToDbBatch, getDbClient } from '../utils/dbClient';
 import { parseAndValidateExcel } from '../utils/excelParserEngine';
 
 export default function DataImportModal({ isOpen, onClose, onImportSuccess, onError }) {
@@ -140,7 +140,7 @@ export default function DataImportModal({ isOpen, onClose, onImportSuccess, onEr
     const startTime = Date.now();
     try {
       // Execute chunked batch save with progress updates
-      const results = await saveScansToSupabaseBatch(
+      const results = await saveScansToDbBatch(
         parsedRows,
         (progress) => {
           setProgressInfo(progress);
@@ -149,7 +149,7 @@ export default function DataImportModal({ isOpen, onClose, onImportSuccess, onEr
       );
 
       const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
-      const isDbConnected = Boolean(getSupabaseClient());
+      const isDbConnected = Boolean(getDbClient());
 
       // Show Completion Result Screen
       setCompleteResult({
@@ -203,7 +203,7 @@ export default function DataImportModal({ isOpen, onClose, onImportSuccess, onEr
               </h4>
               <p style={{ margin: '8px 0 0 0', fontSize: '0.88rem', color: '#94a3b8' }}>
                 {completeResult.isDbConnected
-                  ? `Supabase DB에 정상 반영되었습니다. (소요 시간: ${completeResult.elapsed}초)`
+                  ? `DB에 정상 반영되었습니다. (소요 시간: ${completeResult.elapsed}초)`
                   : `로컬 대시보드에 정상 반영되었습니다. (소요 시간: ${completeResult.elapsed}초)`}
               </p>
             </div>

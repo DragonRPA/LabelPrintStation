@@ -186,17 +186,25 @@ export async function sendZplToPrinter(zplString, printer) {
       }
 
       // ⭐️ 에이전트 실제 ZPL 직통 인쇄 요청
+      const targetPrinterName = printer.rawName || (printer.name && !printer.name.includes('기본 라벨 프린터') ? printer.name : '');
       const res = await fetch('http://127.0.0.1:9988/api/print-direct', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ zpl: zplString })
+        body: JSON.stringify({
+          zpl: zplString,
+          printerName: targetPrinterName
+        })
       });
 
       if (res.ok) {
         return { success: true, message: `[${printer.name}] 로컬 에이전트 ZPL 직통 출력 완료!` };
+      } else {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || `로컬 에이전트 인쇄 실패 (HTTP ${res.status})`);
       }
     } catch (e) {
-      console.warn('에이전트 직통 인쇄 폴백 to 큐:', e);
+      console.error('에이전트 직통 인쇄 오류:', e);
+      throw new Error(`에이전트 인쇄 실패: ${e.message}`);
     }
   }
 

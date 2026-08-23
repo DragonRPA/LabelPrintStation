@@ -19,7 +19,7 @@ import {
   Radio,
   Zap
 } from 'lucide-react';
-import { getSupabaseClient, insertPrintQueue } from '../utils/supabaseClient';
+import { getDbClient, insertPrintQueue } from '../utils/dbClient';
 import {
   getAllPresets,
   getStoredLabelTemplate,
@@ -288,7 +288,7 @@ export default function DirectPrintTab({ onError, onOpenPrintModal }) {
     setStatusMessage({ type: 'info', text: `'${query}' 조회 중...` });
 
     try {
-      const client = getSupabaseClient();
+      const client = getDbClient();
       let matchedItem = null;
 
       if (client) {

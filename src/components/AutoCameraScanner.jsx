@@ -2,7 +2,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import { Camera, RefreshCw, UploadCloud, CheckCircle2, Play, Square, Plus, Trash2 } from 'lucide-react';
 import { getTesseractWorker, preprocessCanvasROI, parseFieldsFromText } from '../utils/ocrWorker';
 import { triggerSuccessFeedback } from '../utils/soundFeedback';
-import { saveScansToSupabase } from '../utils/supabaseClient';
+import { saveScansToDb } from '../utils/dbClient';
 
 export default function AutoCameraScanner({ onError }) {
   const videoRef = useRef(null);
@@ -153,8 +153,8 @@ export default function AutoCameraScanner({ onError }) {
     return () => stopCamera();
   }, []);
 
-  // Save Scans to Supabase
-  const handleExportToSupabase = async () => {
+  // Save Scans to DB
+  const handleExportToDb = async () => {
     if (scannedItems.length === 0) {
       onError('내보낼 스캔 데이터가 없습니다.');
       return;
@@ -162,12 +162,12 @@ export default function AutoCameraScanner({ onError }) {
 
     setIsSaving(true);
     try {
-      await saveScansToSupabase(scannedItems);
+      await saveScansToDb(scannedItems);
       setScannedItems(prev => prev.map(item => ({ ...item, status: 'EXPORTED' })));
-      alert(`성공적으로 ${scannedItems.length}건의 데이터가 Supabase DB에 저장되었습니다!`);
+      alert(`성공적으로 ${scannedItems.length}건의 데이터가 DB에 저장되었습니다.`);
     } catch (err) {
       console.error('Export Error:', err);
-      onError(err.message || 'Supabase 내보내기 중 오류가 발생했습니다.');
+      onError(err.message || 'DB 내보내기 중 오류가 발생했습니다.');
     } finally {
       setIsSaving(false);
     }
@@ -312,12 +312,12 @@ export default function AutoCameraScanner({ onError }) {
 
         <button
           className="btn btn-success"
-          onClick={handleExportToSupabase}
+          onClick={handleExportToDb}
           disabled={isSaving || scannedItems.length === 0}
           style={{ fontSize: '0.85rem' }}
         >
           <UploadCloud size={16} />
-          {isSaving ? 'Supabase 내보내는 중...' : 'Supabase에 내보내기'}
+          {isSaving ? 'DB 저장 중...' : 'DB에 내보내기'}
         </button>
       </div>
 

@@ -197,7 +197,7 @@ DROP POLICY IF EXISTS "Allow all print_queue" ON public.print_queue;
 CREATE POLICY "Allow all print_queue" ON public.print_queue FOR ALL USING (true) WITH CHECK (true);`;
 
     navigator.clipboard.writeText(ddlSql).then(() => {
-      alert('전체 DDL SQL이 클립보드에 복사되었습니다!\nSupabase 대시보드 > SQL Editor에 붙여넣고 RUN을 실행하세요.');
+      alert('전체 DDL SQL이 클립보드에 복사되었습니다!\nNeon 콘솔 > SQL Editor에 붙여넣고 Run을 실행하세요.');
     }).catch(() => {
       alert('클립보드 복사 실패. schema.sql 파일을 확인해 주세요.');
     });
@@ -252,7 +252,7 @@ CREATE POLICY "Allow all print_queue" ON public.print_queue FOR ALL USING (true)
             onClick={handleCopyDdl}
             className="btn btn-outline"
             style={{ fontSize: '0.72rem', padding: '4px 10px', borderColor: '#38bdf8', color: '#38bdf8' }}
-            title="Supabase SQL Editor 실행용 DDL 복사"
+            title="PostgreSQL DDL 복사"
           >
             DDL 복사
           </button>

@@ -98,11 +98,11 @@ export default function LabelDesignerTab({ onError, onOpenPrintModal }) {
   const canvasWidthPx = template ? (template.paper?.widthMm || 72) * PX_PER_MM : 72 * PX_PER_MM;
   const canvasHeightPx = template ? (template.paper?.heightMm || 40) * PX_PER_MM : 40 * PX_PER_MM;
 
-  // 현재 서식의 대상 테이블 및 스키마 (Supabase 실제 스키마 1:1 실시간 동기화)
+  // 현재 서식의 대상 테이블 및 스키마 (DB 실제 스키마 1:1 실시간 동기화)
   const currentTargetTable = template ? (template.targetTable || template.paper?.targetTable || 'asset') : 'asset';
   const [currentTableSchema, setCurrentTableSchema] = useState(() => getTableSchema(currentTargetTable) || DEFAULT_SCHEMA_DEF);
 
-  // ⭐️ 타겟 테이블 변경 시 Supabase 실제 스키마 실시간 비동기 로드
+  // ⭐️ 타겟 테이블 변경 시 DB 실제 스키마 실시간 비동기 로드
   useEffect(() => {
     let isMounted = true;
     fetchTableSchema(currentTargetTable).then(s => {

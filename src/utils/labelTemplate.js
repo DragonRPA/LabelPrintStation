@@ -2,7 +2,7 @@
  * Multi-Template Preset Schema & ZPL II Dynamic Compiler Engine (SSOT)
  * Core Fields: 자산번호(asset_no), 제품명(product_name), 모델명(model_name), 제조번호(serial_no)
  */
-import { getSupabaseClient } from './supabaseClient';
+import { getDbClient } from './dbClient';
 import { getMainFieldName } from './dynamicSchema';
 
 export const LOCAL_KEY_ACTIVE_TEMPLATE_ID = 'IMAGE_SCAN_ACTIVE_TEMPLATE_ID_V3';
@@ -214,7 +214,7 @@ export async function deleteStoredLabelTemplate(templateId) {
     }
 
     // Supabase 백엔드에서도 삭제 시도
-    const client = getSupabaseClient();
+  const client = getDbClient();
     if (client) {
       await client.from('label_templates').delete().eq('id', templateId);
     }
@@ -229,7 +229,7 @@ export async function deleteStoredLabelTemplate(templateId) {
  * ⭐️ Supabase 백엔드에서 전체 라벨 서식 목록 조회 (100% DB SSOT)
  */
 export async function syncTemplatesWithBackend() {
-  const client = getSupabaseClient();
+  const client = getDbClient();
   if (!client) return getAllPresets();
 
   try {
@@ -279,10 +279,10 @@ export async function syncTemplatesWithBackend() {
 }
 
 /**
- * Supabase 백엔드에서 활성 라벨 서식 로드
+ * DB 백엔드에서 활성 라벨 서식 로드
  */
 export async function fetchBackendLabelTemplate() {
-  const client = getSupabaseClient();
+  const client = getDbClient();
   if (!client) return getStoredLabelTemplate();
 
   try {
@@ -347,7 +347,7 @@ export async function saveBackendLabelTemplate(template) {
   };
 
   saveStoredLabelTemplate(normalized);
-  const client = getSupabaseClient();
+  const client = getDbClient();
   if (!client) return { success: true, message: '로컬 서식 저장 완료 (DB 클라이언트 없음)' };
 
   try {
@@ -383,7 +383,7 @@ export async function updatePresetLock(templateId, isLocked) {
       presets[idx].paper.isLocked = Boolean(isLocked);
       localStorage.setItem(LOCAL_KEY_TEMPLATE_PRESETS, JSON.stringify(presets));
 
-      const client = getSupabaseClient();
+    const client = getDbClient();
       if (client) {
         await client.from('label_templates').update({
           paper: presets[idx].paper,

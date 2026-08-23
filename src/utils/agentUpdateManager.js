@@ -4,8 +4,8 @@
  */
 
 export const DEFAULT_AGENT_PORT = 9988;
-export const REMOTE_VERSION_JSON_URL = 'https://raw.githubusercontent.com/DragonRPA/ImageScan/main/print-agent/version.json';
-export const DEFAULT_UPDATE_EXE_URL = 'https://dragonrpa.github.io/ImageScan/UBUS_DragonRPA_Agent.exe';
+export const REMOTE_VERSION_JSON_URL = 'https://raw.githubusercontent.com/DragonRPA/LabelPrintStation/main/print-agent/version.json';
+export const DEFAULT_UPDATE_EXE_URL = 'https://dragonrpa.github.io/LabelPrintStation/UBUS_DragonRPA_Agent.exe';
 
 let cachedLatestRelease = null;
 let lastVersionFetchTime = 0;
