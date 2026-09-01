@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Universal Database Client (SSOT - Powered by Neon Serverless PostgreSQL)
  * Standard: Clean DB Fluent Query Engine with 100% Zero-Adjective Syntax
  */
@@ -8,7 +8,7 @@ import {
   getStoredNeonConnectionString,
   saveStoredNeonConnectionString,
   testNeonConnection
-} from './neonClient';
+} from './neonClient.js';
 
 export { getDbClient, getNeonSql, getStoredNeonConnectionString, saveStoredNeonConnectionString, testNeonConnection };
 

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Neon Serverless PostgreSQL Client & Supabase-Compatible Fluent Query Adapter (SSOT)
  * System: High-Performance Serverless SQL Engine via @neondatabase/serverless
  */
@@ -43,7 +43,7 @@ export async function testNeonConnection(connStr = null) {
   try {
     const target = connStr || getStoredNeonConnectionString();
     const sql = neon(target);
-    const res = await sql`SELECT 1 AS ok;`;
+    const res = await sql.query('SELECT 1 AS ok;');
     if (res && res[0]?.ok === 1) {
       return { success: true, message: 'Neon PostgreSQL 연동 성공!' };
     }
@@ -94,6 +94,13 @@ export class NeonQueryBuilder {
 
   ilike(col, pattern) {
     this.whereConditions.push({ col, op: 'ILIKE', val: pattern });
+    return this;
+  }
+
+  in(col, valList) {
+    if (Array.isArray(valList) && valList.length > 0) {
+      this.whereConditions.push({ col, op: '= ANY', val: valList });
+    }
     return this;
   }
 
@@ -152,6 +159,12 @@ export class NeonQueryBuilder {
     return this;
   }
 
+  maybeSingle() {
+    this.isSingle = true;
+    this.limitVal = 1;
+    return this;
+  }
+
   channel() {
     return {
       on: () => ({
@@ -184,7 +197,11 @@ export class NeonQueryBuilder {
 
         for (const w of this.whereConditions) {
           params.push(w.val);
-          whereClauses.push(`"${w.col}" ${w.op} $${params.length}`);
+          if (w.op === '= ANY') {
+            whereClauses.push(`"${w.col}" = ANY($${params.length})`);
+          } else {
+            whereClauses.push(`"${w.col}" ${w.op} $${params.length}`);
+          }
         }
 
         for (const orStr of this.orConditions) {
@@ -230,19 +247,14 @@ export class NeonQueryBuilder {
           const obj = {};
           cols.forEach(c => {
             const v = row[c];
-            obj[c] = (typeof v === 'object' && v !== null) ? JSON.stringify(v) : (v ?? null);
+            obj[c] = (typeof v === 'object' && v !== null && !(v instanceof Date)) ? v : (v ?? null);
           });
           return obj;
         }));
 
-        const jsonColsDef = cols.map(c => `"${c}" text`).join(', ');
-        const insertCols = cols.map(c => `"${c}"`).join(', ');
-        const selectCols = cols.map(c => `x."${c}"`).join(', ');
-
         let query = `
-          INSERT INTO ${this.table} (${insertCols})
-          SELECT ${selectCols}
-          FROM json_to_recordset($1::json) AS x(${jsonColsDef})
+          INSERT INTO ${this.table}
+          SELECT * FROM json_populate_recordset(null::${this.table}, $1::json)
         `;
 
         if (this.action === 'UPSERT' && this.onConflictKey) {
@@ -359,6 +371,9 @@ export class NeonQueryBuilder {
   }
 
   async _runRaw(query, params = []) {
+    if (this.sql && typeof this.sql.query === 'function') {
+      return await this.sql.query(query, params);
+    }
     if (params.length === 0) {
       return await this.sql(query);
     }
@@ -374,6 +389,10 @@ export function getDbClient() {
   return {
     from: (tableName) => new NeonQueryBuilder(sql, tableName),
     rawSql: sql,
+    rpc: async (fnName, params) => {
+      console.warn(`[DB] RPC call ignored in serverless mode: ${fnName}`);
+      return { data: null, error: null };
+    },
     channel: (name) => ({
       on: () => ({
         subscribe: () => ({

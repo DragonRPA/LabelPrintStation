@@ -2,8 +2,8 @@
  * Multi-Template Preset Schema & ZPL II Dynamic Compiler Engine (SSOT)
  * Core Fields: 자산번호(asset_no), 제품명(product_name), 모델명(model_name), 제조번호(serial_no)
  */
-import { getDbClient } from './dbClient';
-import { getMainFieldName } from './dynamicSchema';
+import { getDbClient } from './dbClient.js';
+import { getMainFieldName } from './dynamicSchema.js';
 
 export const LOCAL_KEY_ACTIVE_TEMPLATE_ID = 'IMAGE_SCAN_ACTIVE_TEMPLATE_ID_V3';
 export const LOCAL_KEY_TEMPLATE_PRESETS = 'IMAGE_SCAN_TEMPLATE_PRESETS_V3';
@@ -268,7 +268,9 @@ export async function syncTemplatesWithBackend() {
       });
 
       // ⭐️ 100% 서버 DB에서 조회된 레코드만 로컬 스토리지에 동기화
-      localStorage.setItem(LOCAL_KEY_TEMPLATE_PRESETS, JSON.stringify(backendPresets));
+      if (typeof window !== 'undefined' && window.localStorage) {
+        localStorage.setItem(LOCAL_KEY_TEMPLATE_PRESETS, JSON.stringify(backendPresets));
+      }
       return backendPresets;
     }
   } catch (err) {

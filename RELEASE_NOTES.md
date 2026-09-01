@@ -1,5 +1,23 @@
 # 릴리즈 노트 (RELEASE_NOTES.md)
 
+## [v1.8.0.Build.3] - 2026-09-01 15:28:00 (KST)
+
+### 🛠️ [Neon Serverless PostgreSQL 쿼리 어댑터 전면 정상화 & DB 연결 복구]
+
+1. **`@neondatabase/serverless` v1.x 함수 호출 규격 정상화 (`sql.query`)**:
+   - `neon()` 클라이언트의 쿼리 실행 엔진을 `sql.query(query, params)`로 개편하여 브라우저 내 모든 SQL 실행 에러 원천 차단
+2. **`NeonQueryBuilder` Fluent API 기능 완비**:
+   - `.maybeSingle()` 및 `.in(col, valList)` 메소드 정식 구현
+   - `.or()` 복합 조건 파싱 엔진 및 `rpc` 폴백 탑재
+   - `INSERT / UPSERT` 시 `json_populate_recordset(null::table_name, $1::json)` 적용으로 UUID/타입 캐스팅 에러 원천 해결
+3. **DB 테이블 스키마 보강 및 무결성 전수 검증 통과**:
+   - `label_templates.target_table`, `schema_definitions.table_name` 컬럼 정합성 보강
+   - 자산 16,472건 조회, 바코드 단건 조회, 라벨 서식 동기화, 프린트 큐 CUD 트랜잭션 전수 검증 통과
+4. **GitHub Pages 최신 배포 완료**:
+   - 프로덕션 번들 빌드 및 배포 완료
+
+---
+
 ## [v1.8.0.Build.2] - 2026-08-23 15:05:00 (KST)
 
 ### 🐛 [PCDashboardView 임포트 복구 및 렌더링 에러 해결]

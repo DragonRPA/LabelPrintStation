@@ -332,7 +332,9 @@ export async function fetchTableSchema(tableId = 'temp_asset') {
         table_version: schemaRow.table_version || 1,
         fields: schemaRow.fields
       };
-      localStorage.setItem(localKey, JSON.stringify(schemaDef));
+      if (typeof window !== 'undefined' && window.localStorage) {
+        localStorage.setItem(localKey, JSON.stringify(schemaDef));
+      }
       return schemaDef;
     }
   } catch (err) {
