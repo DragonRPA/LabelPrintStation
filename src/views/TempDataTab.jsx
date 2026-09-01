@@ -32,7 +32,18 @@ const LOCAL_KEY_TEMP_ASSETS = 'IMAGE_SCAN_TEMP_ASSET_ITEMS';
 
 export default function TempDataTab({ onError, onOpenPrintModal }) {
   const [schema, setSchema] = useState(() => getTableSchema('temp_asset') || TEMP_ASSET_SCHEMA_DEF);
-  const [items, setItems] = useState([]);
+  const [items, setItems] = useState(() => {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      try {
+        const localData = localStorage.getItem(LOCAL_KEY_TEMP_ASSETS);
+        if (localData) {
+          const parsed = JSON.parse(localData);
+          return Array.isArray(parsed) ? parsed : [];
+        }
+      } catch (e) {}
+    }
+    return [];
+  });
   const [isLoading, setIsLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedIds, setSelectedIds] = useState(new Set());
@@ -113,28 +124,18 @@ export default function TempDataTab({ onError, onOpenPrintModal }) {
     try {
       const client = getDbClient();
       if (client) {
-        let allData = [];
-        let from = 0;
-        const PAGE_SIZE = 1000;
+        const { data, error } = await client
+          .from('temp_asset')
+          .select('*')
+          .range(0, 49999);
 
-        while (true) {
-          const { data, error } = await client
-            .from('temp_asset')
-            .select('*')
-            .range(from, from + PAGE_SIZE - 1);
-
-          if (error) {
-            console.error('Supabase temp_asset 페칭 오류:', error);
-            setStatusMessage({ type: 'error', text: `DB 조회 실패: ${error.message}` });
-            break;
-          }
-          if (!data || data.length === 0) break;
-          allData.push(...data);
-          if (data.length < PAGE_SIZE) break;
-          from += PAGE_SIZE;
+        if (error) {
+          console.error('temp_asset 페칭 오류:', error);
+          setStatusMessage({ type: 'error', text: `DB 조회 실패: ${error.message}` });
+          return;
         }
 
-        const formatted = allData.map(r => ({
+        const formatted = (data || []).map(r => ({
           ...r,
           ...(r.data || {}),
           id: r.id,
@@ -147,7 +148,9 @@ export default function TempDataTab({ onError, onOpenPrintModal }) {
           model_name: r.model_name || r.data?.model_name || ''
         }));
         setItems(formatted);
-        localStorage.setItem(LOCAL_KEY_TEMP_ASSETS, JSON.stringify(formatted));
+        if (typeof window !== 'undefined' && window.localStorage) {
+          localStorage.setItem(LOCAL_KEY_TEMP_ASSETS, JSON.stringify(formatted));
+        }
         setIsLoading(false);
         if (isManualQuery) {
           setStatusMessage({ type: 'success', text: `DB에서 총 ${formatted.length}건의 데이터를 성공적으로 조회하였습니다.` });
@@ -178,7 +181,7 @@ export default function TempDataTab({ onError, onOpenPrintModal }) {
 
   useEffect(() => {
     loadSchema();
-    loadData();
+    // ⭐️ 메뉴 진입 시 자동 DB 조회 차단: 사용자가 [DB 조회] 버튼 클릭 시에만 수동 조회 실행
   }, []);
 
   const fields = useMemo(() => schema.fields || [], [schema]);
