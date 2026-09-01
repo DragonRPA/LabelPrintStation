@@ -83,8 +83,11 @@ const clearQueue = async () => {
       })
       .subscribe();
 
-    channelRef.current = channel;
-    return () => { channel.unsubscribe(); };
+    return () => {
+      if (channel && typeof channel.unsubscribe === 'function') {
+        try { channel.unsubscribe(); } catch (e) {}
+      }
+    };
   }, []);
 
   const statItems = [

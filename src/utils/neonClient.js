@@ -165,17 +165,8 @@ export class NeonQueryBuilder {
     return this;
   }
 
-  channel() {
-    return {
-      on: () => ({
-        subscribe: () => ({
-          unsubscribe: () => {}
-        })
-      }),
-      subscribe: () => ({
-        unsubscribe: () => {}
-      })
-    };
+  channel(name) {
+    return createMockChannel(name);
   }
 
   async then(resolve, reject) {
@@ -382,6 +373,25 @@ export class NeonQueryBuilder {
 }
 
 /**
+ * ⭐️ Realtime Channel Mock (체이닝 및 언마운트 완전 방어)
+ */
+export function createMockChannel(name = 'default') {
+  const ch = {
+    name,
+    on: () => ch,
+    subscribe: (callback) => {
+      if (typeof callback === 'function') {
+        try { callback('SUBSCRIBED'); } catch (e) {}
+      }
+      return ch;
+    },
+    unsubscribe: () => ch,
+    removeChannel: () => ch
+  };
+  return ch;
+}
+
+/**
  * ⭐️ 전사 통합 DB 클라이언트 획득 (Supabase 호환)
  */
 export function getDbClient() {
@@ -393,16 +403,12 @@ export function getDbClient() {
       console.warn(`[DB] RPC call ignored in serverless mode: ${fnName}`);
       return { data: null, error: null };
     },
-    channel: (name) => ({
-      on: () => ({
-        subscribe: () => ({
-          unsubscribe: () => {}
-        })
-      }),
-      subscribe: () => ({
-        unsubscribe: () => {}
-      })
-    })
+    channel: (name) => createMockChannel(name),
+    removeChannel: (channel) => {
+      if (channel && typeof channel.unsubscribe === 'function') {
+        channel.unsubscribe();
+      }
+    }
   };
 }
 

@@ -1,5 +1,19 @@
 # 릴리즈 노트 (RELEASE_NOTES.md)
 
+## [v1.8.0.Build.5] - 2026-09-01 16:04:00 (KST)
+
+### 🛡️ [Realtime Channel Mock 엔진 전면 개편 및 unsubscribe 렌더링 에러 영구 해결]
+
+1. **`createMockChannel` 체이닝 및 언마운트 라이프사이클 100% 안전 보장**:
+   - `.channel()`, `.on()`, `.subscribe()`, `.unsubscribe()`, `.removeChannel()` 어느 단계에서도 안전하게 체이닝 가능한 단일 Mock 객체 반환
+   - 컴포넌트 언마운트 시 `channel.unsubscribe is not a function` 시스템 렌더링 복구 에러 원천 해결
+2. **PCDashboard / PCDashboardView 언마운트 안전 체이닝 가드 탑재**:
+   - `typeof channel?.unsubscribe === 'function'` 이중 안전 가드로 모든 탭 전환 시 런타임 예외 발생 차단
+3. **GitHub Pages 최신 배포 완료**:
+   - 프로덕션 번들 빌드 및 배포 완료
+
+---
+
 ## [v1.8.0.Build.4] - 2026-09-01 16:02:00 (KST)
 
 ### ⚡ [임시 데이터 관리 자동 조회 차단 & [DB 조회] 명시적 수동 트리거 전환]

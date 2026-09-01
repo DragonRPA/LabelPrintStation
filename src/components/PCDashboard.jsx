@@ -136,7 +136,9 @@ export default function PCDashboard({
     });
 
     return () => {
-      if (channel) channel.unsubscribe();
+      if (channel && typeof channel.unsubscribe === 'function') {
+        try { channel.unsubscribe(); } catch (e) {}
+      }
     };
   }, []);
 
