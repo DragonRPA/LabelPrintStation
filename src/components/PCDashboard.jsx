@@ -62,6 +62,9 @@ export default function PCDashboard({
   const [isSelectingCells, setIsSelectingCells] = useState(false);
   const [copyToast, setCopyToast] = useState('');
 
+  // ⭐️ 초고속 점진적 렌더링 (초기 150건 즉시 노출 + 스크롤 시 자동 추가)
+  const [displayLimit, setDisplayLimit] = useState(150);
+
   // 전역 마우스 업 감지 (셀 선택 드래그 종료)
   useEffect(() => {
     const handleGlobalMouseUp = () => {
@@ -253,6 +256,29 @@ export default function PCDashboard({
 
     return result;
   }, [items, filterCategory, filterModel, filterSerial, filterStatus, searchGeneral]);
+
+  // ⭐️ 조건 변경 시 화면 렌더링 건수 초기화
+  useEffect(() => {
+    setDisplayLimit(150);
+  }, [items, filterCategory, filterModel, filterSerial, filterStatus, searchGeneral]);
+
+  // ⭐️ 실제 DOM에 렌더링할 상위 슬라이스 (0.02초 즉시 렌더링)
+  const visibleItems = useMemo(() => {
+    return filteredItems.slice(0, displayLimit);
+  }, [filteredItems, displayLimit]);
+
+  // ⭐️ 무한 스크롤 감지 핸들러
+  const handleTableScroll = (e) => {
+    const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
+    if (scrollTop + clientHeight >= scrollHeight - 350) {
+      setDisplayLimit((prev) => {
+        if (prev < filteredItems.length) {
+          return Math.min(prev + 150, filteredItems.length);
+        }
+        return prev;
+      });
+    }
+  };
 
   // ── [1] 체크박스 선택/해제 (오직 체크박스 직접 클릭 시에만 작동) ─────────
   const handleSelectAll = (e) => {
@@ -695,10 +721,15 @@ export default function PCDashboard({
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
-              조회 결과: <strong style={{ color: '#38bdf8' }}>{filteredItems.length}</strong> 건
+              조회 결과: <strong style={{ color: '#38bdf8' }}>{filteredItems.length.toLocaleString()}</strong> 건
+              {filteredItems.length > displayLimit && (
+                <span style={{ color: '#94a3b8', marginLeft: '6px', fontSize: '0.70rem' }}>
+                  (화면 표시: {visibleItems.length.toLocaleString()}건 / 스크롤 시 자동 추가)
+                </span>
+              )}
               {selectedIds.length > 0 && (
                 <span style={{ color: '#f59e0b', marginLeft: '6px', fontWeight: 700 }}>
-                  (선택 {selectedIds.length}건)
+                  (선택 {selectedIds.length.toLocaleString()}건)
                 </span>
               )}
             </span>
@@ -751,14 +782,14 @@ export default function PCDashboard({
             <button
               onClick={onOpenImportModal}
               className="btn btn-outline"
-              style={{ fontSize: '0.72rem', padding: '3px 8px', borderColor: '#38bdf8', color: '#7dd3fc' }}
+              style={{ fontSize: '0.72rem', padding: '3px 8px' }}
             >
               <Upload size={12} /> 엑셀 업로드
             </button>
             <button
               onClick={handleExportData}
               className="btn btn-primary"
-              style={{ fontSize: '0.72rem', padding: '3px 10px' }}
+              style={{ fontSize: '0.72rem', padding: '3px 8px' }}
             >
               <Download size={12} /> 엑셀 내보내기
             </button>
@@ -776,7 +807,11 @@ export default function PCDashboard({
         userSelect: 'none',
         WebkitUserSelect: 'none'
       }}>
-        <div className="grid-scrollbar" style={{ overflowX: 'auto', overflowY: 'auto', maxHeight: 'calc(100vh - 280px)', minHeight: '380px', width: '100%' }}>
+        <div
+          className="grid-scrollbar"
+          onScroll={handleTableScroll}
+          style={{ overflowX: 'auto', overflowY: 'auto', maxHeight: 'calc(100vh - 280px)', minHeight: '380px', width: '100%' }}
+        >
           <table style={{ width: '100%', minWidth: '1600px', borderCollapse: 'collapse', fontSize: '0.72rem', userSelect: 'none', WebkitUserSelect: 'none' }}>
             <thead>
               <tr style={{
@@ -826,7 +861,7 @@ export default function PCDashboard({
                   </td>
                 </tr>
               ) : (
-                filteredItems.map((row, idx) => {
+                visibleItems.map((row, idx) => {
                   const isSelected = selectedIds.includes(row.id || row.asset_no);
                   const assetNo = row.asset_no || row.key_value || '-';
                   const categoryMajor = row.category_major || '-';

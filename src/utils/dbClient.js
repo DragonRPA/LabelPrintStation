@@ -45,7 +45,7 @@ export async function fetchScansFromDb(filters = null) {
   if (!client) return [];
 
   try {
-    let query = client.from('asset').select('*');
+    let query = client.from('asset').select('asset_no, category_major, product_name, model_name, serial_no, asset_status, earning_ratio, shelf_no, asset_option, calibration_date, mac_wlan, mac_lan, imei, components, remark');
     let searchTokens = [];
 
     if (filters) {
