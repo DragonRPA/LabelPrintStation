@@ -1,5 +1,20 @@
 # 릴리즈 노트 (RELEASE_NOTES.md)
 
+## [v1.8.0.Build.6] - 2026-09-17 22:18:00 (KST)
+
+### 🌐 [배포 서비스 도메인 www.dragonrpa.co.kr 하위 경로 전면 전환]
+
+1. **서비스 및 다운로드 URL 전면 동기화**:
+   - 프론트엔드 홈 주소: `https://www.dragonrpa.co.kr/LabelPrintStation/`
+   - 에이전트 자가 업데이트 및 바이너리 다운로드: `https://www.dragonrpa.co.kr/LabelPrintStation/UBUS_DragonRPA_Agent.exe`
+   - 보안인증서 원클릭 설치 배치파일: `https://www.dragonrpa.co.kr/LabelPrintStation/보안인증서_원클릭설치.bat`
+2. **C# Native 에이전트 재컴파일 및 배포 완료**:
+   - `FRONTEND_URL` 및 `updateUrl`을 `www.dragonrpa.co.kr` 경로로 갱신 완료
+3. **GitHub Pages 최신 배포 완료**:
+   - 프로덕션 번들 빌드 및 배포 완료
+
+---
+
 ## [v1.8.0.Build.5] - 2026-09-01 16:04:00 (KST)
 
 ### 🛡️ [Realtime Channel Mock 엔진 전면 개편 및 unsubscribe 렌더링 에러 영구 해결]

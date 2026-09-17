@@ -144,7 +144,7 @@ namespace DragonRPA
     class Program
     {
         const string VERSION = "v1.6";
-        const string FRONTEND_URL = "https://dragonrpa.github.io/LabelPrintStation/";
+        const string FRONTEND_URL = "https://www.dragonrpa.co.kr/LabelPrintStation/";
         const int HTTP_PORT = 9988;
 
         const int VK_CONTROL = 0x11;
@@ -651,7 +651,7 @@ namespace DragonRPA
                         string updateUrl = ExtractJsonValue(body, "updateUrl");
                         if (string.IsNullOrEmpty(updateUrl))
                         {
-                            updateUrl = "https://dragonrpa.github.io/LabelPrintStation/UBUS_DragonRPA_Agent.exe";
+                            updateUrl = "https://www.dragonrpa.co.kr/LabelPrintStation/UBUS_DragonRPA_Agent.exe";
                         }
 
                         try

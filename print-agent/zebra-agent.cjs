@@ -1452,7 +1452,7 @@ del "%~f0"
 }
 
 // ── [프론트엔드 웹 URL 및 콘솔 윈도우 제어] ─────────────────────────────────
-const FRONTEND_URL = 'https://dragonrpa.github.io/LabelPrintStation/';
+const FRONTEND_URL = 'https://www.dragonrpa.co.kr/LabelPrintStation/';
 
 function openFrontendInBrowser() {
   try {

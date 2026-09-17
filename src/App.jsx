@@ -74,7 +74,7 @@ export default function App() {
   // 보안인증서 원클릭 설치 배치파일 다운로드
   const handleDownloadCertInstaller = () => {
     const link = document.createElement('a');
-    link.href = 'https://dragonrpa.github.io/LabelPrintStation/보안인증서_원클릭설치.bat';
+    link.href = 'https://www.dragonrpa.co.kr/LabelPrintStation/보안인증서_원클릭설치.bat';
     link.download = '보안인증서_원클릭설치.bat';
     document.body.appendChild(link);
     link.click();

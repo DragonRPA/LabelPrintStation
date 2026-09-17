@@ -3,7 +3,7 @@
   "private": true,
   "version": "1.7.0",
   "type": "module",
-  "homepage": "https://DragonRPA.github.io/LabelPrintStation",
+  "homepage": "https://www.dragonrpa.co.kr/LabelPrintStation",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
