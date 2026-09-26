@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Smartphone, Monitor, Database, CheckCircle, Bot, ShieldCheck } from 'lucide-react';
+import { Smartphone, Monitor, Database, CheckCircle, Bot, ShieldCheck, Palette } from 'lucide-react';
 import MobileScannerView from './views/MobileScannerView';
 import PCDashboardView from './views/PCDashboardView';
+import LabelDesignerDemoView from './views/LabelDesignerDemoView';
 import FileExportModal from './components/FileExportModal';
 import LabelPrintModal from './components/LabelPrintModal';
 import DataImportModal from './components/DataImportModal';
@@ -15,6 +16,32 @@ import { initHardwareScannerListener } from './utils/hardwareScanner';
 import { checkAgentLiveStatus } from './utils/agentUpdateManager';
 
 export default function App() {
+  // ⭐️ 독립 라벨 디자이너 데모 페이지 라우팅 감지 (/demo 또는 #/demo 또는 ?demo)
+  const [isDemoMode, setIsDemoMode] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const p = window.location.pathname.toLowerCase();
+      const h = window.location.hash.toLowerCase();
+      const s = window.location.search.toLowerCase();
+      return p.endsWith('/demo') || p.includes('/demo/') || h.includes('demo') || s.includes('demo');
+    }
+    return false;
+  });
+
+  useEffect(() => {
+    const handleLocationCheck = () => {
+      const p = window.location.pathname.toLowerCase();
+      const h = window.location.hash.toLowerCase();
+      const s = window.location.search.toLowerCase();
+      setIsDemoMode(p.endsWith('/demo') || p.includes('/demo/') || h.includes('demo') || s.includes('demo'));
+    };
+    window.addEventListener('popstate', handleLocationCheck);
+    window.addEventListener('hashchange', handleLocationCheck);
+    return () => {
+      window.removeEventListener('popstate', handleLocationCheck);
+      window.removeEventListener('hashchange', handleLocationCheck);
+    };
+  }, []);
+
   const [deviceMode, setDeviceMode] = useState(() => {
     if (typeof window !== 'undefined') {
       const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -96,6 +123,10 @@ export default function App() {
     setPrintModalState({ isOpen: true, items: testSampleItem, config: null });
   };
 
+  if (isDemoMode) {
+    return <LabelDesignerDemoView />;
+  }
+
   return (
     <div style={{ width: '100%', maxWidth: '100%', margin: '0', padding: deviceMode === 'mobile' ? '4px' : '6px 10px' }}>
       {/* Header Bar */}
@@ -134,8 +165,30 @@ export default function App() {
             </div>
           </div>
 
-          {/* Mode Switcher & DB Config & Agent Status */}
+          {/* Mode Switcher & DB Config & Agent Status & Demo Button */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            {/* 독립 라벨 디자이너 데모 링크 버튼 */}
+            <button
+              className="btn btn-outline"
+              style={{
+                padding: '4px 8px',
+                fontSize: '0.72rem',
+                borderColor: '#38bdf8',
+                color: '#38bdf8',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                backgroundColor: 'rgba(56, 189, 248, 0.1)'
+              }}
+              onClick={() => {
+                window.location.hash = '#/demo';
+                setIsDemoMode(true);
+              }}
+              title="라벨 서식 디자이너 독립 인터랙티브 데모 페이지로 이동"
+            >
+              <Palette size={13} />
+              디자이너 데모
+            </button>
             {/* Agent Live Status & Smart Update Button */}
             <button
               className="btn btn-outline"
