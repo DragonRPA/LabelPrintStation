@@ -5,7 +5,17 @@
     <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>LabelPrintStation</title>
-    <script type="module" crossorigin src="/LabelPrintStation/assets/index-BoJNhkTD.js"></script>
+    <script>
+      (function(l) {
+        if (l.search && l.search.startsWith('?p=/')) {
+          var path = l.search.slice(4).split('&')[0];
+          window.history.replaceState(null, null,
+            l.pathname.replace(/\/$/, '') + path + (l.hash || '')
+          );
+        }
+      }(window.location));
+    </script>
+    <script type="module" crossorigin src="/LabelPrintStation/assets/index-Chgcss_d.js"></script>
     <link rel="stylesheet" crossorigin href="/LabelPrintStation/assets/index-B2sEakt6.css">
   </head>
   <body>
