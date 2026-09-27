@@ -240,7 +240,10 @@ function compileDemoZpl(template, sampleData, dpmm = 8) {
 }
 
 export default function LabelDesignerDemoView() {
-  const [template, setTemplate] = useState(() => DEMO_PRESETS[0]);
+  const [template, setTemplate] = useState(() => {
+    const p = DEMO_PRESETS[0];
+    return { ...p, elements: (p.elements || []).filter(el => el.type !== 'box') };
+  });
   const [activeSchemaId, setActiveSchemaId] = useState('asset');
   const [activePrinterId, setActivePrinterId] = useState('mock_zt411');
   const [selectedElemId, setSelectedElemId] = useState(null);
@@ -278,7 +281,9 @@ export default function LabelDesignerDemoView() {
 
   // 프리셋 로드
   const handleLoadPreset = (preset) => {
-    setTemplate(JSON.parse(JSON.stringify(preset)));
+    const clone = JSON.parse(JSON.stringify(preset));
+    clone.elements = (clone.elements || []).filter(el => el.type !== 'box');
+    setTemplate(clone);
     if (preset.schemaId && MOCK_SCHEMAS[preset.schemaId]) {
       handleSchemaChange(preset.schemaId);
     }
@@ -719,34 +724,27 @@ export default function LabelDesignerDemoView() {
             <label style={{ fontSize: '0.72rem', fontWeight: 700, color: '#94a3b8', display: 'block', marginBottom: '4px' }}>
               라벨 객체 추가
             </label>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '4px' }}>
               <button
                 onClick={() => handleAddElement('text')}
                 className="btn btn-outline"
-                style={{ fontSize: '0.70rem', padding: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '3px' }}
+                style={{ fontSize: '0.70rem', padding: '6px 4px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '3px' }}
               >
                 <Plus size={11} /> 텍스트
               </button>
               <button
                 onClick={() => handleAddElement('barcode_code128')}
                 className="btn btn-outline"
-                style={{ fontSize: '0.70rem', padding: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '3px' }}
+                style={{ fontSize: '0.70rem', padding: '6px 4px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '3px' }}
               >
                 <Plus size={11} /> 바코드
               </button>
               <button
                 onClick={() => handleAddElement('qr')}
                 className="btn btn-outline"
-                style={{ fontSize: '0.70rem', padding: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '3px' }}
+                style={{ fontSize: '0.70rem', padding: '6px 4px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '3px' }}
               >
-                <Plus size={11} /> QR 코드
-              </button>
-              <button
-                onClick={() => handleAddElement('box')}
-                className="btn btn-outline"
-                style={{ fontSize: '0.70rem', padding: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '3px' }}
-              >
-                <Plus size={11} /> 테두리 사각형
+                <Plus size={11} /> QR
               </button>
             </div>
           </div>
@@ -877,17 +875,11 @@ export default function LabelDesignerDemoView() {
                     )}
 
                     {elem.type === 'barcode_code128' && (
-                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                        <RealBarcodeSvg
-                          value={val || 'SAMPLE'}
-                          height={(elem.heightMm || 12) * PX_PER_MM * 0.75}
-                          width={1.6}
-                          displayValue={false}
-                        />
-                        {elem.showText !== false && (
-                          <span style={{ fontSize: '9px', fontWeight: 600, marginTop: '1px' }}>{val}</span>
-                        )}
-                      </div>
+                      <RealBarcodeSvg
+                        value={val || 'SAMPLE'}
+                        heightPx={(elem.heightMm || 12) * PX_PER_MM}
+                        showText={elem.showText !== false}
+                      />
                     )}
 
                     {elem.type === 'qr' && (
@@ -902,7 +894,8 @@ export default function LabelDesignerDemoView() {
                         fontSize: '9px',
                         fontWeight: 700,
                         textAlign: 'center',
-                        padding: '2px'
+                        padding: '2px',
+                        pointerEvents: 'none'
                       }}>
                         QR
                       </div>
@@ -913,7 +906,8 @@ export default function LabelDesignerDemoView() {
                         width: `${(elem.widthMm || 40) * PX_PER_MM}px`,
                         height: `${(elem.heightMm || 20) * PX_PER_MM}px`,
                         border: `${elem.borderThickness || 1}px solid #000000`,
-                        boxSizing: 'border-box'
+                        boxSizing: 'border-box',
+                        pointerEvents: 'none'
                       }} />
                     )}
 
@@ -921,7 +915,8 @@ export default function LabelDesignerDemoView() {
                       <div style={{
                         width: `${(elem.widthMm || 40) * PX_PER_MM}px`,
                         height: `${elem.borderThickness || 1}px`,
-                        backgroundColor: '#000000'
+                        backgroundColor: '#000000',
+                        pointerEvents: 'none'
                       }} />
                     )}
                   </div>

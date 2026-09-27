@@ -83,11 +83,14 @@ function encodeCode39(text) {
 export function RealBarcodeSvg({
   value = 'TEST0001',
   type = 'CODE128',
-  heightPx = 40,
+  heightPx,
+  height,
+  heightMm,
   showText = true,
   scale = 1.0,
   prefix = ''
 }) {
+  const effectiveHeightPx = heightPx || (heightMm ? heightMm * 8.5 : null) || height || 40;
   const cleanVal = String(value || 'TEST0001').trim() || 'TEST0001';
   const isCode39 = type === 'CODE39';
   const bars = isCode39 ? encodeCode39(cleanVal) : encodeCode128B(cleanVal);
@@ -96,7 +99,7 @@ export function RealBarcodeSvg({
   let totalWidth = 0;
   bars.forEach(b => { totalWidth += b.width * moduleWidth; });
 
-  const barHeight = showText ? Math.max(12, heightPx - 14) : heightPx;
+  const barHeight = Math.max(10, showText ? Math.max(12, effectiveHeightPx - 14) : effectiveHeightPx);
   let currentX = 0;
 
   const rects = [];
