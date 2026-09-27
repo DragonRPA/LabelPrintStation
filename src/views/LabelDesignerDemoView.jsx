@@ -111,8 +111,7 @@ const DEMO_PRESETS = [
       { id: 'el_barcode', type: 'barcode_code128', bindField: 'asset_no', xMm: 3, yMm: 8, heightMm: 12, showText: true, text: '226080599' },
       { id: 'el_prod', type: 'text', bindField: 'product_name', text: '삼성 갤럭시북4 프로', xMm: 3, yMm: 23, fontSize: 11, bold: true },
       { id: 'el_model', type: 'text', bindField: 'model_name', text: '모델: NT960XGK-KC71G', xMm: 3, yMm: 28, fontSize: 10, bold: false },
-      { id: 'el_sn', type: 'text', bindField: 'serial_no', text: 'S/N: R5KL60F0CZW', xMm: 3, yMm: 33, fontSize: 10, bold: false },
-      { id: 'el_box', type: 'box', xMm: 1, yMm: 1, widthMm: 70, heightMm: 38, borderThickness: 1 }
+      { id: 'el_sn', type: 'text', bindField: 'serial_no', text: 'S/N: R5KL60F0CZW', xMm: 3, yMm: 33, fontSize: 10, bold: false }
     ]
   },
   {
@@ -140,8 +139,7 @@ const DEMO_PRESETS = [
       { id: 'el_recip', type: 'text', bindField: 'recipient', text: '받는분: 홍길동 고객님 (010-9876-5432)', xMm: 4, yMm: 30, fontSize: 11, bold: true },
       { id: 'el_addr', type: 'text', bindField: 'address', text: '주소: 서울특별시 강남구 테헤란로 152', xMm: 4, yMm: 36, fontSize: 10, bold: false },
       { id: 'el_box', type: 'text', bindField: 'box_count', text: '수량: 1 of 3 (파손주의)', xMm: 4, yMm: 42, fontSize: 10, bold: true },
-      { id: 'el_qr_track', type: 'qr', bindField: 'tracking_no', xMm: 76, yMm: 30, size: 5, text: 'https://dragonrpa.co.kr/track/6824-9102-3341' },
-      { id: 'el_border', type: 'box', xMm: 2, yMm: 2, widthMm: 96, heightMm: 56, borderThickness: 2 }
+      { id: 'el_qr_track', type: 'qr', bindField: 'tracking_no', xMm: 76, yMm: 30, size: 5, text: 'https://dragonrpa.co.kr/track/6824-9102-3341' }
     ]
   },
   {
@@ -155,8 +153,7 @@ const DEMO_PRESETS = [
       { id: 'el_p_code_bc', type: 'barcode_code128', bindField: 'part_code', xMm: 3, yMm: 8, heightMm: 12, showText: true, text: 'PRT-MCU-8840' },
       { id: 'el_p_name', type: 'text', bindField: 'part_name', text: '품명: 메인보드 제어 MCU', xMm: 3, yMm: 23, fontSize: 11, bold: true },
       { id: 'el_p_lot', type: 'text', bindField: 'lot_no', text: 'LOT: LOT-202609-08 | 수량: 500 PCS', xMm: 3, yMm: 29, fontSize: 10, bold: false },
-      { id: 'el_p_date', type: 'text', bindField: 'in_date', text: '입고일: 2026-09-26 | 검수: 이정용', xMm: 3, yMm: 34, fontSize: 9, bold: false },
-      { id: 'el_p_box', type: 'box', xMm: 1, yMm: 1, widthMm: 78, heightMm: 38, borderThickness: 1 }
+      { id: 'el_p_date', type: 'text', bindField: 'in_date', text: '입고일: 2026-09-26 | 검수: 이정용', xMm: 3, yMm: 34, fontSize: 9, bold: false }
     ]
   },
   {
@@ -344,6 +341,27 @@ export default function LabelDesignerDemoView() {
       elements: (prev.elements || []).filter(el => el.id !== selectedElemId)
     }));
     setSelectedElemId(null);
+  };
+
+  // 레이어 맨 앞으로 / 맨 뒤로 이동
+  const handleBringToFront = () => {
+    if (!selectedElemId || !template) return;
+    setTemplate(prev => {
+      const elem = prev.elements.find(e => e.id === selectedElemId);
+      if (!elem) return prev;
+      const rest = prev.elements.filter(e => e.id !== selectedElemId);
+      return { ...prev, elements: [...rest, elem] };
+    });
+  };
+
+  const handleSendToBack = () => {
+    if (!selectedElemId || !template) return;
+    setTemplate(prev => {
+      const elem = prev.elements.find(e => e.id === selectedElemId);
+      if (!elem) return prev;
+      const rest = prev.elements.filter(e => e.id !== selectedElemId);
+      return { ...prev, elements: [elem, ...rest] };
+    });
   };
 
   // 마우스 드래그 핸들러
@@ -815,14 +833,18 @@ export default function LabelDesignerDemoView() {
                 }
               }}
             >
-              {(template?.elements || []).map(elem => {
+              {(template?.elements || []).map((elem, elemIdx) => {
                 const isSelected = selectedElemId === elem.id;
+                const isBoxOrLine = elem.type === 'box' || elem.type === 'line_h';
                 const xPx = (elem.xMm || 0) * PX_PER_MM;
                 const yPx = (elem.yMm || 0) * PX_PER_MM;
                 let val = elem.text || '';
                 if (elem.bindField && sampleData[elem.bindField]) {
                   val = sampleData[elem.bindField];
                 }
+
+                // zIndex: 선택된 객체(50) > 일반 텍스트/바코드/QR(10 + elemIdx) > 일반 박스/선(1 + elemIdx)
+                const elemZIndex = isSelected ? 50 : (isBoxOrLine ? 1 + elemIdx : 10 + elemIdx);
 
                 return (
                   <div
@@ -836,6 +858,7 @@ export default function LabelDesignerDemoView() {
                       position: 'absolute',
                       left: `${xPx}px`,
                       top: `${yPx}px`,
+                      zIndex: elemZIndex,
                       cursor: 'move',
                       outline: isSelected ? '2px solid #0284c7' : '1px dashed transparent',
                       backgroundColor: isSelected ? 'rgba(2, 132, 199, 0.08)' : 'transparent',
@@ -1070,6 +1093,46 @@ export default function LabelDesignerDemoView() {
                       style={{ width: '100%', backgroundColor: '#0f172a', border: '1px solid #475569', borderRadius: '4px', padding: '4px 6px', color: '#fff', fontSize: '0.72rem', boxSizing: 'border-box' }}
                     />
                   </div>
+                </div>
+
+                {/* 레이어 순서 변경 (맨 앞으로 / 맨 뒤로) */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
+                  <button
+                    type="button"
+                    onClick={handleBringToFront}
+                    className="btn btn-outline"
+                    style={{
+                      fontSize: '0.66rem',
+                      padding: '4px 6px',
+                      color: '#cbd5e1',
+                      borderColor: '#475569',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '4px',
+                      borderRadius: '4px'
+                    }}
+                  >
+                    🔼 맨 앞으로
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleSendToBack}
+                    className="btn btn-outline"
+                    style={{
+                      fontSize: '0.66rem',
+                      padding: '4px 6px',
+                      color: '#cbd5e1',
+                      borderColor: '#475569',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '4px',
+                      borderRadius: '4px'
+                    }}
+                  >
+                    🔽 맨 뒤로
+                  </button>
                 </div>
 
                 {/* 5. 텍스트 전용 속성 */}
