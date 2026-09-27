@@ -432,15 +432,22 @@ export default function LabelDesignerDemoView() {
       onMouseUp={handleMouseUp}
       style={{
         width: '100%',
-        minHeight: '100vh',
+        height: '100vh',
+        maxHeight: '100vh',
         backgroundColor: '#0f172a',
         color: '#f8fafc',
         fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
         padding: '8px 12px',
-        boxSizing: 'border-box'
+        boxSizing: 'border-box',
+        overflow: 'hidden',
+        display: 'flex',
+        flexDirection: 'column'
       }}
     >
       <style>{`
+        .demo-panel-scroll {
+          scrollbar-gutter: stable;
+        }
         .demo-panel-scroll::-webkit-scrollbar {
           width: 5px;
           height: 5px;
@@ -460,15 +467,19 @@ export default function LabelDesignerDemoView() {
       {/* ── [1] 상단 네비게이션 헤더 ── */}
       <header style={{
         display: 'flex',
-        flexWrap: 'wrap',
+        flexWrap: 'nowrap',
         justifyContent: 'space-between',
         alignItems: 'center',
         padding: '8px 16px',
         backgroundColor: '#1e293b',
         borderRadius: '8px',
         border: '1px solid #334155',
-        marginBottom: '10px',
-        gap: '8px'
+        marginBottom: '8px',
+        height: '46px',
+        minHeight: '46px',
+        maxHeight: '46px',
+        boxSizing: 'border-box',
+        flexShrink: 0
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <a
@@ -484,7 +495,8 @@ export default function LabelDesignerDemoView() {
               padding: '4px 8px',
               borderRadius: '4px',
               backgroundColor: 'rgba(56, 189, 248, 0.1)',
-              border: '1px solid rgba(56, 189, 248, 0.2)'
+              border: '1px solid rgba(56, 189, 248, 0.2)',
+              whiteSpace: 'nowrap'
             }}
           >
             <ArrowLeft size={13} /> 메인 스테이션 복귀
@@ -495,22 +507,23 @@ export default function LabelDesignerDemoView() {
             padding: '3px 8px',
             borderRadius: '4px',
             fontWeight: 800,
-            fontSize: '0.78rem'
+            fontSize: '0.78rem',
+            whiteSpace: 'nowrap'
           }}>
             DEMO
           </div>
-          <div>
-            <h1 style={{ fontSize: '0.95rem', fontWeight: 700, margin: 0, color: '#f8fafc' }}>
+          <div style={{ minWidth: 0, overflow: 'hidden' }}>
+            <h1 style={{ fontSize: '0.92rem', fontWeight: 700, margin: 0, color: '#f8fafc', whiteSpace: 'nowrap' }}>
               라벨 서식 디자이너 인터랙티브 데모
             </h1>
-            <span style={{ fontSize: '0.68rem', color: '#94a3b8' }}>
+            <span style={{ fontSize: '0.66rem', color: '#94a3b8', whiteSpace: 'nowrap' }}>
               WYSIWYG 캔버스 설계 · 실시간 ZPL II 코드 컴파일러 · 가상 인쇄 시뮬레이터
             </span>
           </div>
         </div>
 
         {/* 액션 버튼군 */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
           <button
             onClick={() => setShowZplCode(!showZplCode)}
             className="btn btn-outline"
@@ -521,7 +534,8 @@ export default function LabelDesignerDemoView() {
               color: showZplCode ? '#38bdf8' : '#cbd5e1',
               display: 'flex',
               alignItems: 'center',
-              gap: '4px'
+              gap: '4px',
+              whiteSpace: 'nowrap'
             }}
           >
             <Code size={13} /> {showZplCode ? 'ZPL 숨기기' : 'ZPL 코드 보기'}
@@ -536,7 +550,8 @@ export default function LabelDesignerDemoView() {
               color: '#cbd5e1',
               display: 'flex',
               alignItems: 'center',
-              gap: '4px'
+              gap: '4px',
+              whiteSpace: 'nowrap'
             }}
           >
             <Download size={13} /> JSON 저장
@@ -555,6 +570,7 @@ export default function LabelDesignerDemoView() {
               display: 'flex',
               alignItems: 'center',
               gap: '4px',
+              whiteSpace: 'nowrap',
               boxShadow: '0 0 10px rgba(56, 189, 248, 0.4)'
             }}
           >
@@ -566,9 +582,13 @@ export default function LabelDesignerDemoView() {
       {/* ── [2] 메인 3분할 작업대 레이아웃 ── */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: '260px 1fr 340px',
+        gridTemplateColumns: '260px minmax(0, 1fr) 340px',
         gap: '10px',
-        alignItems: 'start'
+        flex: 1,
+        minHeight: 0,
+        height: 'calc(100vh - 66px)',
+        alignItems: 'stretch',
+        boxSizing: 'border-box'
       }}>
         {/* ◀ 좌측 패널: 서식 프리셋 / 모의 프린터 / 스키마 선택 */}
         <div
@@ -581,9 +601,14 @@ export default function LabelDesignerDemoView() {
             display: 'flex',
             flexDirection: 'column',
             gap: '12px',
-            maxHeight: 'calc(100vh - 85px)',
-            overflowY: 'auto',
-            boxSizing: 'border-box'
+            height: '100%',
+            maxHeight: '100%',
+            overflowY: 'scroll',
+            scrollbarGutter: 'stable',
+            boxSizing: 'border-box',
+            width: '260px',
+            minWidth: '260px',
+            maxWidth: '260px'
           }}
         >
           {/* 1. 프리셋 템플릿 선택 */}
@@ -751,7 +776,15 @@ export default function LabelDesignerDemoView() {
         </div>
 
         {/* ◀ 중앙 패널: WYSIWYG 캔버스 작업대 + ZPL 코드 뷰어 */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', minWidth: 0 }}>
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '8px',
+          minWidth: 0,
+          height: '100%',
+          maxHeight: '100%',
+          boxSizing: 'border-box'
+        }}>
           {/* 캔버스 상단 툴바 (고정 높이 38px로 버튼 유무에 따른 흔들림 완벽 방지) */}
           <div style={{
             display: 'flex',
@@ -764,7 +797,8 @@ export default function LabelDesignerDemoView() {
             height: '38px',
             minHeight: '38px',
             maxHeight: '38px',
-            boxSizing: 'border-box'
+            boxSizing: 'border-box',
+            flexShrink: 0
           }}>
             <span style={{ fontSize: '0.74rem', fontWeight: 600, color: '#cbd5e1', display: 'flex', alignItems: 'center', gap: '6px' }}>
               <span>캔버스 작업대:</span>
@@ -801,17 +835,22 @@ export default function LabelDesignerDemoView() {
           </div>
 
           {/* 캔버스 영역 */}
-          <div style={{
-            backgroundColor: '#0f172a',
-            border: '2px dashed #334155',
-            borderRadius: '8px',
-            padding: '24px',
-            minHeight: '420px',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            overflow: 'auto'
-          }}>
+          <div
+            className="demo-panel-scroll"
+            style={{
+              backgroundColor: '#0f172a',
+              border: '2px dashed #334155',
+              borderRadius: '8px',
+              padding: '24px',
+              flex: 1,
+              minHeight: 0,
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              overflow: 'auto',
+              boxSizing: 'border-box'
+            }}
+          >
             <div
               ref={canvasRef}
               style={{
@@ -931,7 +970,9 @@ export default function LabelDesignerDemoView() {
               backgroundColor: '#1e293b',
               border: '1px solid #334155',
               borderRadius: '8px',
-              padding: '10px'
+              padding: '10px',
+              flexShrink: 0,
+              boxSizing: 'border-box'
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
                 <span style={{ fontSize: '0.74rem', fontWeight: 700, color: '#38bdf8', display: 'flex', alignItems: 'center', gap: '4px' }}>
@@ -978,7 +1019,9 @@ export default function LabelDesignerDemoView() {
               fontSize: '0.72rem',
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'space-between'
+              justifyContent: 'space-between',
+              flexShrink: 0,
+              boxSizing: 'border-box'
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <CheckCircle size={14} style={{ color: '#4ade80' }} />
@@ -1007,9 +1050,14 @@ export default function LabelDesignerDemoView() {
             display: 'flex',
             flexDirection: 'column',
             gap: '12px',
-            maxHeight: 'calc(100vh - 85px)',
-            overflowY: 'auto',
-            boxSizing: 'border-box'
+            height: '100%',
+            maxHeight: '100%',
+            overflowY: 'scroll',
+            scrollbarGutter: 'stable',
+            boxSizing: 'border-box',
+            width: '340px',
+            minWidth: '340px',
+            maxWidth: '340px'
           }}
         >
           {/* 섹션 1: 객체 속성 편집 */}
