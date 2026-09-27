@@ -417,6 +417,23 @@ export default function LabelDesignerDemoView() {
         boxSizing: 'border-box'
       }}
     >
+      <style>{`
+        .demo-panel-scroll::-webkit-scrollbar {
+          width: 5px;
+          height: 5px;
+        }
+        .demo-panel-scroll::-webkit-scrollbar-track {
+          background: #0f172a;
+          border-radius: 4px;
+        }
+        .demo-panel-scroll::-webkit-scrollbar-thumb {
+          background: #334155;
+          border-radius: 4px;
+        }
+        .demo-panel-scroll::-webkit-scrollbar-thumb:hover {
+          background: #475569;
+        }
+      `}</style>
       {/* ── [1] 상단 네비게이션 헤더 ── */}
       <header style={{
         display: 'flex',
@@ -526,20 +543,26 @@ export default function LabelDesignerDemoView() {
       {/* ── [2] 메인 3분할 작업대 레이아웃 ── */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: '260px 1fr 300px',
+        gridTemplateColumns: '260px 1fr 340px',
         gap: '10px',
         alignItems: 'start'
       }}>
         {/* ◀ 좌측 패널: 서식 프리셋 / 모의 프린터 / 스키마 선택 */}
-        <div style={{
-          backgroundColor: '#1e293b',
-          border: '1px solid #334155',
-          borderRadius: '8px',
-          padding: '10px',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '12px'
-        }}>
+        <div
+          className="demo-panel-scroll"
+          style={{
+            backgroundColor: '#1e293b',
+            border: '1px solid #334155',
+            borderRadius: '8px',
+            padding: '10px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '12px',
+            maxHeight: 'calc(100vh - 85px)',
+            overflowY: 'auto',
+            boxSizing: 'border-box'
+          }}
+        >
           {/* 1. 프리셋 템플릿 선택 */}
           <div>
             <label style={{ fontSize: '0.72rem', fontWeight: 700, color: '#94a3b8', display: 'block', marginBottom: '4px' }}>
@@ -712,8 +735,8 @@ export default function LabelDesignerDemoView() {
         </div>
 
         {/* ◀ 중앙 패널: WYSIWYG 캔버스 작업대 + ZPL 코드 뷰어 */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          {/* 캔버스 상단 툴바 */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', minWidth: 0 }}>
+          {/* 캔버스 상단 툴바 (고정 높이 38px로 버튼 유무에 따른 흔들림 완벽 방지) */}
           <div style={{
             display: 'flex',
             justifyContent: 'space-between',
@@ -721,30 +744,44 @@ export default function LabelDesignerDemoView() {
             backgroundColor: '#1e293b',
             border: '1px solid #334155',
             borderRadius: '6px',
-            padding: '6px 12px'
+            padding: '0 12px',
+            height: '38px',
+            minHeight: '38px',
+            maxHeight: '38px',
+            boxSizing: 'border-box'
           }}>
-            <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#cbd5e1' }}>
-              캔버스 뷰: <strong style={{ color: '#38bdf8' }}>{template?.paper?.widthMm} × {template?.paper?.heightMm} mm</strong> (객체 {template?.elements?.length || 0}개)
+            <span style={{ fontSize: '0.74rem', fontWeight: 600, color: '#cbd5e1', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span>캔버스 작업대:</span>
+              <strong style={{ color: '#38bdf8' }}>{template?.paper?.widthMm} × {template?.paper?.heightMm} mm</strong>
+              <span style={{ color: '#475569' }}>|</span>
+              <span style={{ color: '#94a3b8', fontSize: '0.70rem' }}>총 {template?.elements?.length || 0}개 객체</span>
             </span>
-            {selectedElem && (
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', height: '26px' }}>
               <button
                 onClick={handleDeleteSelected}
+                disabled={!selectedElem}
                 style={{
-                  backgroundColor: '#ef4444',
-                  color: '#fff',
-                  border: 'none',
+                  backgroundColor: selectedElem ? '#ef4444' : 'transparent',
+                  color: selectedElem ? '#ffffff' : '#475569',
+                  border: selectedElem ? '1px solid #dc2626' : '1px solid #334155',
                   borderRadius: '4px',
-                  padding: '3px 8px',
+                  padding: '0 10px',
+                  height: '26px',
                   fontSize: '0.70rem',
-                  display: 'flex',
+                  fontWeight: 600,
+                  display: 'inline-flex',
                   alignItems: 'center',
                   gap: '4px',
-                  cursor: 'pointer'
+                  cursor: selectedElem ? 'pointer' : 'not-allowed',
+                  opacity: selectedElem ? 1 : 0.4,
+                  transition: 'all 0.15s ease',
+                  boxSizing: 'border-box'
                 }}
               >
                 <Trash2 size={11} /> 선택 객체 삭제
               </button>
-            )}
+            </div>
           </div>
 
           {/* 캔버스 영역 */}
@@ -934,131 +971,246 @@ export default function LabelDesignerDemoView() {
         </div>
 
         {/* ◀ 우측 패널: 선택된 객체 속성 인스펙터 & 샘플 데이터 바인딩 */}
-        <div style={{
-          backgroundColor: '#1e293b',
-          border: '1px solid #334155',
-          borderRadius: '8px',
-          padding: '10px',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '12px'
-        }}>
-          <h2 style={{ fontSize: '0.78rem', fontWeight: 700, color: '#38bdf8', margin: 0 }}>
-            객체 속성 편집
-          </h2>
+        <div
+          className="demo-panel-scroll"
+          style={{
+            backgroundColor: '#1e293b',
+            border: '1px solid #334155',
+            borderRadius: '8px',
+            padding: '10px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '12px',
+            maxHeight: 'calc(100vh - 85px)',
+            overflowY: 'auto',
+            boxSizing: 'border-box'
+          }}
+        >
+          {/* 섹션 1: 객체 속성 편집 */}
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+              <h2 style={{ fontSize: '0.78rem', fontWeight: 700, color: '#38bdf8', margin: 0, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <Sliders size={13} /> 객체 속성 편집
+              </h2>
+              {selectedElem && (
+                <span style={{ fontSize: '0.64rem', padding: '2px 6px', borderRadius: '4px', backgroundColor: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8', border: '1px solid rgba(56, 189, 248, 0.3)', fontWeight: 600 }}>
+                  {selectedElem.type}
+                </span>
+              )}
+            </div>
 
-          {selectedElem ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <div>
-                <label style={{ fontSize: '0.68rem', color: '#94a3b8' }}>객체 유형</label>
-                <input
-                  type="text"
-                  readOnly
-                  value={selectedElem.type}
-                  style={{ width: '100%', backgroundColor: '#0f172a', border: '1px solid #475569', borderRadius: '4px', padding: '4px', color: '#94a3b8', fontSize: '0.72rem' }}
-                />
-              </div>
-
-              {/* DB 필드 바인딩 */}
-              <div>
-                <label style={{ fontSize: '0.68rem', color: '#94a3b8' }}>동적 데이터 바인딩</label>
-                <select
-                  value={selectedElem.bindField || ''}
-                  onChange={(e) => updateSelectedElem({ bindField: e.target.value || null })}
-                  style={{ width: '100%', backgroundColor: '#0f172a', border: '1px solid #475569', borderRadius: '4px', padding: '4px', color: '#fff', fontSize: '0.72rem' }}
-                >
-                  <option value="">(고정 텍스트/직접 입력)</option>
-                  {(MOCK_SCHEMAS[activeSchemaId]?.fields || []).map(f => (
-                    <option key={f.id} value={f.id}>{f.name} ({f.id})</option>
-                  ))}
-                </select>
-              </div>
-
-              {/* 텍스트 내용 */}
-              <div>
-                <label style={{ fontSize: '0.68rem', color: '#94a3b8' }}>출력 텍스트/기본값</label>
-                <input
-                  type="text"
-                  value={selectedElem.text || ''}
-                  onChange={(e) => updateSelectedElem({ text: e.target.value })}
-                  style={{ width: '100%', backgroundColor: '#0f172a', border: '1px solid #475569', borderRadius: '4px', padding: '4px', color: '#fff', fontSize: '0.72rem' }}
-                />
-              </div>
-
-              {/* 좌표 X, Y */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
+            {selectedElem ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {/* 1. 객체 유형 */}
                 <div>
-                  <label style={{ fontSize: '0.66rem', color: '#94a3b8' }}>X 좌표 (mm)</label>
+                  <label style={{ fontSize: '0.68rem', color: '#94a3b8', display: 'block', marginBottom: '2px' }}>객체 유형</label>
                   <input
-                    type="number"
-                    value={selectedElem.xMm || 0}
-                    onChange={(e) => updateSelectedElem({ xMm: Number(e.target.value) })}
-                    style={{ width: '100%', backgroundColor: '#0f172a', border: '1px solid #475569', borderRadius: '4px', padding: '4px', color: '#fff', fontSize: '0.72rem' }}
+                    type="text"
+                    readOnly
+                    value={selectedElem.type}
+                    style={{ width: '100%', backgroundColor: '#0f172a', border: '1px solid #475569', borderRadius: '4px', padding: '4px 6px', color: '#94a3b8', fontSize: '0.72rem', boxSizing: 'border-box' }}
                   />
                 </div>
-                <div>
-                  <label style={{ fontSize: '0.66rem', color: '#94a3b8' }}>Y 좌표 (mm)</label>
-                  <input
-                    type="number"
-                    value={selectedElem.yMm || 0}
-                    onChange={(e) => updateSelectedElem({ yMm: Number(e.target.value) })}
-                    style={{ width: '100%', backgroundColor: '#0f172a', border: '1px solid #475569', borderRadius: '4px', padding: '4px', color: '#fff', fontSize: '0.72rem' }}
-                  />
-                </div>
-              </div>
 
-              {/* 텍스트 전용 속성 */}
-              {selectedElem.type === 'text' && (
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', alignItems: 'center' }}>
+                {/* 2. 동적 데이터 바인딩 (text, barcode, qr) */}
+                {['text', 'barcode_code128', 'qr'].includes(selectedElem.type) && (
                   <div>
-                    <label style={{ fontSize: '0.66rem', color: '#94a3b8' }}>폰트 크기</label>
+                    <label style={{ fontSize: '0.68rem', color: '#94a3b8', display: 'block', marginBottom: '2px' }}>동적 데이터 바인딩</label>
+                    <select
+                      value={selectedElem.bindField || ''}
+                      onChange={(e) => updateSelectedElem({ bindField: e.target.value || null })}
+                      style={{ width: '100%', backgroundColor: '#0f172a', border: '1px solid #475569', borderRadius: '4px', padding: '4px 6px', color: '#fff', fontSize: '0.72rem', boxSizing: 'border-box' }}
+                    >
+                      <option value="">(고정 텍스트/직접 입력)</option>
+                      {(MOCK_SCHEMAS[activeSchemaId]?.fields || []).map(f => (
+                        <option key={f.id} value={f.id}>{f.name} ({f.id})</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                {/* 3. 출력 텍스트/기본값 (text, barcode, qr) */}
+                {['text', 'barcode_code128', 'qr'].includes(selectedElem.type) && (
+                  <div>
+                    <label style={{ fontSize: '0.68rem', color: '#94a3b8', display: 'block', marginBottom: '2px' }}>출력 텍스트/기본값</label>
                     <input
-                      type="number"
-                      value={selectedElem.fontSize || 10}
-                      onChange={(e) => updateSelectedElem({ fontSize: Number(e.target.value) })}
-                      style={{ width: '100%', backgroundColor: '#0f172a', border: '1px solid #475569', borderRadius: '4px', padding: '4px', color: '#fff', fontSize: '0.72rem' }}
+                      type="text"
+                      value={selectedElem.text || ''}
+                      onChange={(e) => updateSelectedElem({ text: e.target.value })}
+                      style={{ width: '100%', backgroundColor: '#0f172a', border: '1px solid #475569', borderRadius: '4px', padding: '4px 6px', color: '#fff', fontSize: '0.72rem', boxSizing: 'border-box' }}
                     />
                   </div>
-                  <div style={{ paddingTop: '14px' }}>
-                    <label style={{ fontSize: '0.72rem', color: '#cbd5e1', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
-                      <input
-                        type="checkbox"
-                        checked={!!selectedElem.bold}
-                        onChange={(e) => updateSelectedElem({ bold: e.target.checked })}
-                      /> 볼드체
-                    </label>
+                )}
+
+                {/* 4. 좌표 X, Y */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
+                  <div>
+                    <label style={{ fontSize: '0.66rem', color: '#94a3b8', display: 'block', marginBottom: '2px' }}>X 좌표 (mm)</label>
+                    <input
+                      type="number"
+                      value={selectedElem.xMm || 0}
+                      onChange={(e) => updateSelectedElem({ xMm: Number(e.target.value) })}
+                      style={{ width: '100%', backgroundColor: '#0f172a', border: '1px solid #475569', borderRadius: '4px', padding: '4px 6px', color: '#fff', fontSize: '0.72rem', boxSizing: 'border-box' }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '0.66rem', color: '#94a3b8', display: 'block', marginBottom: '2px' }}>Y 좌표 (mm)</label>
+                    <input
+                      type="number"
+                      value={selectedElem.yMm || 0}
+                      onChange={(e) => updateSelectedElem({ yMm: Number(e.target.value) })}
+                      style={{ width: '100%', backgroundColor: '#0f172a', border: '1px solid #475569', borderRadius: '4px', padding: '4px 6px', color: '#fff', fontSize: '0.72rem', boxSizing: 'border-box' }}
+                    />
                   </div>
                 </div>
-              )}
 
-              {/* 바코드 전용 속성 */}
-              {selectedElem.type === 'barcode_code128' && (
-                <div>
-                  <label style={{ fontSize: '0.66rem', color: '#94a3b8' }}>바코드 높이 (mm)</label>
-                  <input
-                    type="number"
-                    value={selectedElem.heightMm || 12}
-                    onChange={(e) => updateSelectedElem({ heightMm: Number(e.target.value) })}
-                    style={{ width: '100%', backgroundColor: '#0f172a', border: '1px solid #475569', borderRadius: '4px', padding: '4px', color: '#fff', fontSize: '0.72rem' }}
-                  />
-                </div>
-              )}
-            </div>
-          ) : (
-            <div style={{ padding: '24px 8px', textAlign: 'center', color: '#64748b', fontSize: '0.72rem' }}>
-              캔버스에서 수정할 요소를 클릭하세요.
-            </div>
-          )}
+                {/* 5. 텍스트 전용 속성 */}
+                {selectedElem.type === 'text' && (
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', alignItems: 'center' }}>
+                    <div>
+                      <label style={{ fontSize: '0.66rem', color: '#94a3b8', display: 'block', marginBottom: '2px' }}>폰트 크기</label>
+                      <input
+                        type="number"
+                        value={selectedElem.fontSize || 10}
+                        onChange={(e) => updateSelectedElem({ fontSize: Number(e.target.value) })}
+                        style={{ width: '100%', backgroundColor: '#0f172a', border: '1px solid #475569', borderRadius: '4px', padding: '4px 6px', color: '#fff', fontSize: '0.72rem', boxSizing: 'border-box' }}
+                      />
+                    </div>
+                    <div style={{ paddingTop: '14px' }}>
+                      <label style={{ fontSize: '0.72rem', color: '#cbd5e1', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
+                        <input
+                          type="checkbox"
+                          checked={!!selectedElem.bold}
+                          onChange={(e) => updateSelectedElem({ bold: e.target.checked })}
+                        /> 볼드체 (굵게)
+                      </label>
+                    </div>
+                  </div>
+                )}
 
-          {/* 샘플 데이터 실시간 변경 */}
+                {/* 6. 바코드 전용 속성 */}
+                {selectedElem.type === 'barcode_code128' && (
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', alignItems: 'center' }}>
+                    <div>
+                      <label style={{ fontSize: '0.66rem', color: '#94a3b8', display: 'block', marginBottom: '2px' }}>바코드 높이 (mm)</label>
+                      <input
+                        type="number"
+                        value={selectedElem.heightMm || 12}
+                        onChange={(e) => updateSelectedElem({ heightMm: Number(e.target.value) })}
+                        style={{ width: '100%', backgroundColor: '#0f172a', border: '1px solid #475569', borderRadius: '4px', padding: '4px 6px', color: '#fff', fontSize: '0.72rem', boxSizing: 'border-box' }}
+                      />
+                    </div>
+                    <div style={{ paddingTop: '14px' }}>
+                      <label style={{ fontSize: '0.72rem', color: '#cbd5e1', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
+                        <input
+                          type="checkbox"
+                          checked={selectedElem.showText !== false}
+                          onChange={(e) => updateSelectedElem({ showText: e.target.checked })}
+                        /> 하단 번호 표기
+                      </label>
+                    </div>
+                  </div>
+                )}
+
+                {/* 7. QR 코드 전용 속성 */}
+                {selectedElem.type === 'qr' && (
+                  <div>
+                    <label style={{ fontSize: '0.66rem', color: '#94a3b8', display: 'block', marginBottom: '2px' }}>QR 크기 배율 (2 ~ 10)</label>
+                    <input
+                      type="number"
+                      min={2}
+                      max={10}
+                      value={selectedElem.size || 4}
+                      onChange={(e) => updateSelectedElem({ size: Number(e.target.value) })}
+                      style={{ width: '100%', backgroundColor: '#0f172a', border: '1px solid #475569', borderRadius: '4px', padding: '4px 6px', color: '#fff', fontSize: '0.72rem', boxSizing: 'border-box' }}
+                    />
+                  </div>
+                )}
+
+                {/* 8. 박스(Box) 전용 속성 */}
+                {selectedElem.type === 'box' && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
+                      <div>
+                        <label style={{ fontSize: '0.66rem', color: '#94a3b8', display: 'block', marginBottom: '2px' }}>가로 너비 (mm)</label>
+                        <input
+                          type="number"
+                          value={selectedElem.widthMm || 40}
+                          onChange={(e) => updateSelectedElem({ widthMm: Number(e.target.value) })}
+                          style={{ width: '100%', backgroundColor: '#0f172a', border: '1px solid #475569', borderRadius: '4px', padding: '4px 6px', color: '#fff', fontSize: '0.72rem', boxSizing: 'border-box' }}
+                        />
+                      </div>
+                      <div>
+                        <label style={{ fontSize: '0.66rem', color: '#94a3b8', display: 'block', marginBottom: '2px' }}>세로 높이 (mm)</label>
+                        <input
+                          type="number"
+                          value={selectedElem.heightMm || 20}
+                          onChange={(e) => updateSelectedElem({ heightMm: Number(e.target.value) })}
+                          style={{ width: '100%', backgroundColor: '#0f172a', border: '1px solid #475569', borderRadius: '4px', padding: '4px 6px', color: '#fff', fontSize: '0.72rem', boxSizing: 'border-box' }}
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label style={{ fontSize: '0.66rem', color: '#94a3b8', display: 'block', marginBottom: '2px' }}>테두리 선 두께 (dot/px)</label>
+                      <input
+                        type="number"
+                        min={1}
+                        max={8}
+                        value={selectedElem.borderThickness || 1}
+                        onChange={(e) => updateSelectedElem({ borderThickness: Number(e.target.value) })}
+                        style={{ width: '100%', backgroundColor: '#0f172a', border: '1px solid #475569', borderRadius: '4px', padding: '4px 6px', color: '#fff', fontSize: '0.72rem', boxSizing: 'border-box' }}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* 9. 가로선(Line) 전용 속성 */}
+                {selectedElem.type === 'line_h' && (
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
+                    <div>
+                      <label style={{ fontSize: '0.66rem', color: '#94a3b8', display: 'block', marginBottom: '2px' }}>선 길이 (mm)</label>
+                      <input
+                        type="number"
+                        value={selectedElem.widthMm || 40}
+                        onChange={(e) => updateSelectedElem({ widthMm: Number(e.target.value) })}
+                        style={{ width: '100%', backgroundColor: '#0f172a', border: '1px solid #475569', borderRadius: '4px', padding: '4px 6px', color: '#fff', fontSize: '0.72rem', boxSizing: 'border-box' }}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ fontSize: '0.66rem', color: '#94a3b8', display: 'block', marginBottom: '2px' }}>선 두께 (dot/px)</label>
+                      <input
+                        type="number"
+                        min={1}
+                        max={8}
+                        value={selectedElem.borderThickness || 1}
+                        onChange={(e) => updateSelectedElem({ borderThickness: Number(e.target.value) })}
+                        style={{ width: '100%', backgroundColor: '#0f172a', border: '1px solid #475569', borderRadius: '4px', padding: '4px 6px', color: '#fff', fontSize: '0.72rem', boxSizing: 'border-box' }}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div style={{ padding: '16px 8px', textAlign: 'center', color: '#64748b', fontSize: '0.72rem', backgroundColor: '#0f172a', borderRadius: '6px', border: '1px dashed #334155' }}>
+                캔버스에서 수정할 요소를 클릭하세요.
+              </div>
+            )}
+          </div>
+
+          {/* 섹션 2: 샘플 데이터 실시간 변경 */}
           <div style={{ borderTop: '1px solid #334155', paddingTop: '10px' }}>
-            <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#94a3b8', display: 'block', marginBottom: '6px' }}>
-              모의 데이터 실시간 변경
-            </span>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', maxHeight: '180px', overflowY: 'auto' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+              <span style={{ fontSize: '0.74rem', fontWeight: 700, color: '#38bdf8', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <Database size={13} /> 모의 데이터 실시간 변경
+              </span>
+              <span style={{ fontSize: '0.64rem', color: '#94a3b8' }}>
+                {MOCK_SCHEMAS[activeSchemaId]?.fields?.length || 0}개 항목
+              </span>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
               {(MOCK_SCHEMAS[activeSchemaId]?.fields || []).map(f => (
-                <div key={f.id}>
-                  <label style={{ fontSize: '0.64rem', color: '#64748b' }}>{f.name}</label>
+                <div key={f.id} style={{ display: 'flex', flexDirection: 'column', gap: '1px' }}>
+                  <label style={{ fontSize: '0.64rem', color: '#94a3b8', fontWeight: 600 }}>{f.name} ({f.id})</label>
                   <input
                     type="text"
                     value={sampleData[f.id] || ''}
@@ -1067,10 +1219,11 @@ export default function LabelDesignerDemoView() {
                       width: '100%',
                       backgroundColor: '#0f172a',
                       border: '1px solid #334155',
-                      borderRadius: '3px',
-                      padding: '3px 6px',
+                      borderRadius: '4px',
+                      padding: '4px 6px',
                       color: '#cbd5e1',
-                      fontSize: '0.68rem'
+                      fontSize: '0.70rem',
+                      boxSizing: 'border-box'
                     }}
                   />
                 </div>
