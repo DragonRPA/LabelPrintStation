@@ -809,7 +809,11 @@ export default function LabelDesignerDemoView() {
                 userSelect: 'none',
                 overflow: 'hidden'
               }}
-              onClick={() => setSelectedElemId(null)}
+              onClick={(e) => {
+                if (e.target === canvasRef.current) {
+                  setSelectedElemId(null);
+                }
+              }}
             >
               {(template?.elements || []).map(elem => {
                 const isSelected = selectedElemId === elem.id;
@@ -824,6 +828,10 @@ export default function LabelDesignerDemoView() {
                   <div
                     key={elem.id}
                     onMouseDown={(e) => handleMouseDown(elem.id, e)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedElemId(elem.id);
+                    }}
                     style={{
                       position: 'absolute',
                       left: `${xPx}px`,
