@@ -88,33 +88,53 @@ export default function TempDataTab({ onError, onOpenPrintModal }) {
 
   // ⭐️ Supabase DB 물리 컬럼 정의 (그 외 커스텀 필드는 data JSONB로 100% 저장)
   const KNOWN_COLUMNS = useMemo(() => new Set([
-    'key_value', 'asset_no', 'product_name', 'model_name', 'serial_no',
+    'asset_no', 'category_major', 'product_name', 'model_name', 'serial_no',
     'asset_status', 'earning_ratio', 'shelf_no', 'asset_option',
-    'calibration_date', 'mac_wlan', 'mac_lan', 'imei', 'components', 'remark', 'data'
+    'calibration_date', 'mac_wlan', 'mac_lan', 'imei', 'components', 'remark', 'data',
+    'created_at', 'updated_at'
   ]), []);
 
-  const normalizeRowForDb = (rawItem, currentKeyField = 'imei') => {
+  const generateUuid = () => {
+    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+      return crypto.randomUUID();
+    }
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+      const r = (Math.random() * 16) | 0;
+      const v = c === 'x' ? r : (r & 0x3) | 0x8;
+      return v.toString(16);
+    });
+  };
+
+  const normalizeRowForDb = (rawItem, currentKeyField = 'asset_no') => {
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    const rowId = (rawItem.id && uuidRegex.test(String(rawItem.id))) ? String(rawItem.id) : generateUuid();
+    const keyVal = String(rawItem[currentKeyField] || rawItem.asset_no || rawItem.imei || '');
+
     const dbRow = {
-      data: { ...rawItem }
+      id: rowId,
+      data: { ...rawItem, id: rowId, key_value: keyVal },
+      created_at: rawItem.created_at || new Date().toISOString(),
+      updated_at: new Date().toISOString()
     };
+
     Object.entries(rawItem).forEach(([k, v]) => {
-      if (k === 'id') {
-        if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v)) {
-          dbRow.id = v;
-        }
-        return;
-      }
+      if (k === 'id' || k === 'data') return;
       if (k === 'mac_address') {
-        dbRow.mac_wlan = String(v || '');
+        dbRow.mac_wlan = String(v ?? '');
       }
       if (KNOWN_COLUMNS.has(k)) {
-        dbRow[k] = v;
+        if (k === 'earning_ratio') {
+          const numVal = parseFloat(v);
+          dbRow.earning_ratio = Number.isFinite(numVal) ? numVal : 0;
+        } else {
+          dbRow[k] = v ?? '';
+        }
       }
     });
 
-    dbRow.key_value = String(rawItem[currentKeyField] || rawItem.imei || rawItem.asset_no || '');
     if (!dbRow.asset_no && rawItem.asset_no) dbRow.asset_no = String(rawItem.asset_no);
     if (!dbRow.imei && rawItem.imei) dbRow.imei = String(rawItem.imei);
+    if (!dbRow.asset_no && currentKeyField === 'asset_no' && keyVal) dbRow.asset_no = keyVal;
     return dbRow;
   };
 
@@ -369,7 +389,7 @@ export default function TempDataTab({ onError, onOpenPrintModal }) {
         if (item.id && /^[0-9a-f-]{36}$/i.test(item.id)) {
           await client.from('temp_asset').delete().eq('id', item.id);
         } else if (item[keyField]) {
-          await client.from('temp_asset').delete().or(`key_value.eq.${item[keyField]},asset_no.eq.${item[keyField]},imei.eq.${item[keyField]}`);
+          await client.from('temp_asset').delete().or(`asset_no.eq.${item[keyField]},imei.eq.${item[keyField]}`);
         }
       }
     } catch (err) {

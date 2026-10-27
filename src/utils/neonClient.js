@@ -233,8 +233,40 @@ export class NeonQueryBuilder {
           return { data: [], error: null };
         }
 
-        const cols = Object.keys(this.payloadData[0]);
-        const jsonStr = JSON.stringify(this.payloadData.map(row => {
+        const uuidPkTables = new Set(['temp_asset', 'print_queue', 'scan_records']);
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        const makeUuid = () => {
+          if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+            return crypto.randomUUID();
+          }
+          return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+            const r = (Math.random() * 16) | 0;
+            const v = c === 'x' ? r : (r & 0x3) | 0x8;
+            return v.toString(16);
+          });
+        };
+
+        const normalizedRows = this.payloadData.map(row => {
+          const cloned = { ...row };
+          if (uuidPkTables.has(this.table)) {
+            if (!cloned.id || !uuidRegex.test(String(cloned.id))) {
+              cloned.id = makeUuid();
+            }
+            if (!cloned.created_at) {
+              cloned.created_at = new Date().toISOString();
+            }
+          }
+          if (this.table === 'temp_asset' && !cloned.updated_at) {
+            cloned.updated_at = new Date().toISOString();
+          }
+          return cloned;
+        });
+
+        const colSet = new Set();
+        normalizedRows.forEach(r => Object.keys(r).forEach(k => colSet.add(k)));
+        const cols = Array.from(colSet);
+
+        const jsonStr = JSON.stringify(normalizedRows.map(row => {
           const obj = {};
           cols.forEach(c => {
             const v = row[c];

@@ -25,16 +25,23 @@ export function getMainFieldName(fieldOrName) {
 export function getFieldAliases(field) {
   if (!field) return [];
   const aliases = new Set();
-  if (field.id) aliases.add(String(field.id).trim().toLowerCase());
+  if (field.id) {
+    const idNorm = String(field.id).trim().toLowerCase();
+    aliases.add(idNorm);
+    aliases.add(idNorm.replace(/[\s_\-]/g, ''));
+  }
 
   if (field.name) {
-    String(field.name).split(',').forEach(part => {
-      const trimmed = part.trim();
-      if (trimmed) {
-        aliases.add(trimmed.toLowerCase());
-        aliases.add(trimmed.toLowerCase().replace(/[\s_\-]/g, '')); // 공백 및 언더바 제거 버전도 매핑
-      }
-    });
+    // 콤마(,), 세미콜론(;), 또는 마침표+공백(. )으로 구분된 모든 표시명(별칭)을 추출하여 등록
+    String(field.name)
+      .split(/[,;]|\.\s+/)
+      .forEach(part => {
+        const trimmed = part.trim();
+        if (trimmed) {
+          aliases.add(trimmed.toLowerCase());
+          aliases.add(trimmed.toLowerCase().replace(/[\s_\-]/g, '')); // 공백 및 언더바 제거 버전도 매핑
+        }
+      });
   }
   return Array.from(aliases);
 }
