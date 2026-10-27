@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
+import * as XLSX from 'xlsx';
 import {
   FolderOpen,
   Upload,
@@ -25,6 +26,7 @@ import {
   getMainFieldName,
   resolveFieldId
 } from '../utils/dynamicSchema';
+import { resolveFieldKeyFromHeader } from '../utils/excelParserEngine';
 import { getAllPresets, generateDynamicZpl } from '../utils/labelTemplate';
 import { getRegisteredPrinters, getActivePrinterId, sendZplToPrinter } from '../utils/printerManager';
 
@@ -399,12 +401,22 @@ export default function TempDataTab({ onError, onOpenPrintModal }) {
 
   // 7. 엑셀 양식 다운로드 (.xlsx) - 스키마 정의 필드명 중 첫 번째 주된 헤더로 순수 템플릿 생성
   const handleDownloadExcelTemplate = () => {
-    const mainHeaders = fields.map(f => getMainFieldName(f.name));
-    const worksheet = XLSX.utils.json_to_sheet([], { header: mainHeaders });
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, '임시데이터_양식');
-    worksheet['!cols'] = fields.map(() => ({ wch: 18 }));
-    XLSX.writeFile(workbook, `임시데이터_업로드양식_${new Date().toISOString().slice(0, 10)}.xlsx`);
+    try {
+      const mainHeaders = fields.map(f => getMainFieldName(f.name));
+      const worksheet = XLSX.utils.json_to_sheet([], { header: mainHeaders });
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, '임시데이터_양식');
+      worksheet['!cols'] = fields.map(() => ({ wch: 18 }));
+      const fileName = `임시데이터_업로드양식_${new Date().toISOString().slice(0, 10)}.xlsx`;
+      XLSX.writeFile(workbook, fileName);
+      setStatusMessage({ type: 'success', text: `엑셀 양식 파일(${fileName})을 다운로드했습니다.` });
+      setTimeout(() => setStatusMessage(null), 3000);
+    } catch (err) {
+      console.error('엑셀 양식 다운로드 오류:', err);
+      const errMsg = `엑셀 양식 다운로드 실패: ${err.message}`;
+      setStatusMessage({ type: 'error', text: errMsg });
+      alert(errMsg);
+    }
   };
 
   // 8. ⭐️ 엑셀 대량 업로드 (Supabase 실제 DB 100% 실시간 일괄 저장 및 정밀 예외처리)
@@ -438,10 +450,11 @@ export default function TempDataTab({ onError, onOpenPrintModal }) {
 
     reader.onload = async (evt) => {
       try {
-        const bstr = evt.target.result;
+        const arrayBuffer = evt.target.result;
+        const data = new Uint8Array(arrayBuffer);
         let wb;
         try {
-          wb = XLSX.read(bstr, { type: 'binary' });
+          wb = XLSX.read(data, { type: 'array' });
         } catch (parseErr) {
           throw new Error(`엑셀 파일 구조 파싱 실패: 손상되었거나 암호화된 파일입니다 (${parseErr.message})`);
         }
@@ -462,6 +475,10 @@ export default function TempDataTab({ onError, onOpenPrintModal }) {
         const parsedRows = [];
         for (let idx = 0; idx < rawJson.length; idx++) {
           const row = rawJson[idx];
+          // 완전히 비어 있는 행은 자동으로 건너뜀
+          const isAllEmpty = Object.values(row).every(v => String(v ?? '').trim() === '');
+          if (isAllEmpty) continue;
+
           const item = {
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
@@ -469,18 +486,32 @@ export default function TempDataTab({ onError, onOpenPrintModal }) {
 
           Object.entries(row).forEach(([colName, val]) => {
             const trimmedCol = String(colName).trim();
-            const matchedFieldId = resolveFieldId(trimmedCol, fields);
-            item[matchedFieldId] = String(val).trim();
+            if (!trimmedCol || trimmedCol.startsWith('__EMPTY')) return;
+            let matchedFieldId = resolveFieldId(trimmedCol, fields);
+            // 기본 스키마 매핑에 실패한 경우 표준 동의어 사전(resolveFieldKeyFromHeader)으로 2차 매핑
+            if (matchedFieldId === trimmedCol) {
+              const aliasId = resolveFieldKeyFromHeader(trimmedCol);
+              if (aliasId) matchedFieldId = aliasId;
+            }
+            item[matchedFieldId] = String(val ?? '').trim();
           });
 
           // 키 인덱스 값 유효성 사전 검증
           const rowKeyVal = item[keyField] || item.key_value || item.imei || item.asset_no;
           if (!rowKeyVal && fields.some(f => f.id === keyField && (f.isRequired || f.isKey))) {
             const keyLabel = getMainFieldName(schema.key_field_name) || keyField;
-            throw new Error(`엑셀 ${idx + 2}번째 행에서 필수 키 항목인 [${keyLabel}] 값이 누락되었습니다.`);
+            const currentHeaders = Object.keys(rawJson[0] || {}).filter(h => !h.startsWith('__EMPTY')).join(', ');
+            throw new Error(
+              `엑셀 ${idx + 2}번째 행에서 필수 키 항목인 [${keyLabel}] 값이 누락되었습니다.\n` +
+              `(인식된 엑셀 1행 헤더: ${currentHeaders || '없음'})`
+            );
           }
 
           parsedRows.push(item);
+        }
+
+        if (parsedRows.length === 0) {
+          throw new Error('유효한 데이터 행이 없습니다. 2행부터 데이터를 입력했는지 확인하세요.');
         }
 
         // ⭐️ 3. 기존 DB temp_asset 테이블의 모든 기존 데이터 완전 삭제 (최종 데이터로 교체 적재)
@@ -539,7 +570,7 @@ export default function TempDataTab({ onError, onOpenPrintModal }) {
         if (fileInputRef.current) fileInputRef.current.value = '';
       }
     };
-    reader.readAsBinaryString(file);
+    reader.readAsArrayBuffer(file);
   };
 
   // 9. 선택 항목 체크박스 토글
