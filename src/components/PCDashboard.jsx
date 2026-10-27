@@ -309,13 +309,22 @@ export default function PCDashboard({
     });
   };
 
-  const handleCellMouseEnter = (rowIdx, colIdx) => {
+  const handleCellMouseEnter = (rowIdx, colIdx, e) => {
     if (!isSelectingCells || !cellSelection) return;
-    setCellSelection((prev) => ({
-      ...prev,
-      endRow: rowIdx,
-      endCol: colIdx
-    }));
+    const evt = e || (typeof window !== 'undefined' ? window.event : null);
+    if (evt && typeof evt.buttons === 'number' && (evt.buttons & 1) !== 1) {
+      setIsSelectingCells(false);
+      return;
+    }
+    setCellSelection((prev) => {
+      if (!prev) return null;
+      if (prev.endRow === rowIdx && prev.endCol === colIdx) return prev;
+      return {
+        ...prev,
+        endRow: rowIdx,
+        endCol: colIdx
+      };
+    });
   };
 
   // 특정 셀이 현재 선택 범위에 포함되는지 검사

@@ -63,14 +63,24 @@ export default function TempDataTab({ onError, onOpenPrintModal }) {
 
   const fileInputRef = useRef(null);
 
-  // 전역 마우스 업 감지 (드래그 선택 종료)
+  // 전역 마우스 업 및 창 포커스 이탈 감지 (드래그 선택 종료)
   useEffect(() => {
     const handleGlobalMouseUp = () => {
       setIsSelectingCells(false);
     };
+    const handleGlobalKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setIsSelectingCells(false);
+        setCellSelection(null);
+      }
+    };
     window.addEventListener('mouseup', handleGlobalMouseUp);
+    window.addEventListener('blur', handleGlobalMouseUp);
+    window.addEventListener('keydown', handleGlobalKeyDown);
     return () => {
       window.removeEventListener('mouseup', handleGlobalMouseUp);
+      window.removeEventListener('blur', handleGlobalMouseUp);
+      window.removeEventListener('keydown', handleGlobalKeyDown);
     };
   }, []);
 
@@ -222,10 +232,18 @@ export default function TempDataTab({ onError, onOpenPrintModal }) {
     setIsSelectingCells(true);
   };
 
-  // ⭐️ 셀 마우스 엔터 (영역 드래그 확장)
-  const handleCellMouseEnter = (rowIdx, colIdx) => {
+  // ⭐️ 셀 마우스 엔터 (영역 드래그 확장 - 실제 좌클릭 유지 상태 검증 및 동일 셀 리렌더 차단)
+  const handleCellMouseEnter = (rowIdx, colIdx, e) => {
     if (!isSelectingCells) return;
-    setCellSelection(prev => (prev ? { ...prev, endRow: rowIdx, endCol: colIdx } : null));
+    if (e && typeof e.buttons === 'number' && (e.buttons & 1) !== 1) {
+      setIsSelectingCells(false);
+      return;
+    }
+    setCellSelection(prev => {
+      if (!prev) return null;
+      if (prev.endRow === rowIdx && prev.endCol === colIdx) return prev;
+      return { ...prev, endRow: rowIdx, endCol: colIdx };
+    });
   };
 
   // ⭐️ 셀이 선택 범위 내에 있는지 판별
@@ -804,10 +822,10 @@ export default function TempDataTab({ onError, onOpenPrintModal }) {
         maxHeight: 'calc(100vh - 220px)',
         position: 'relative'
       }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.72rem' }}>
+        <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0, fontSize: '0.72rem' }}>
           <thead>
-            <tr style={{ backgroundColor: '#1e293b', color: '#94a3b8', borderBottom: '1px solid #334155', position: 'sticky', top: 0, zIndex: 10 }}>
-              <th style={{ padding: '6px 8px', width: '32px', textAlign: 'center' }}>
+            <tr style={{ backgroundColor: '#1e293b', color: '#94a3b8', position: 'sticky', top: 0, zIndex: 10 }}>
+              <th style={{ padding: '6px 8px', width: '32px', textAlign: 'center', backgroundColor: '#1e293b', borderBottom: '1px solid #334155' }}>
                 <button
                   onClick={handleToggleSelectAll}
                   style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
@@ -819,9 +837,9 @@ export default function TempDataTab({ onError, onOpenPrintModal }) {
                   )}
                 </button>
               </th>
-              <th style={{ padding: '6px 8px', textAlign: 'center', width: '60px', whiteSpace: 'nowrap' }}>관리</th>
+              <th style={{ padding: '6px 8px', textAlign: 'center', width: '60px', whiteSpace: 'nowrap', backgroundColor: '#1e293b', borderBottom: '1px solid #334155' }}>관리</th>
               {fields.map(f => (
-                <th key={f.id} style={{ padding: '6px 8px', textAlign: 'left', whiteSpace: 'nowrap' }} title={f.name}>
+                <th key={f.id} style={{ padding: '6px 8px', textAlign: 'left', whiteSpace: 'nowrap', backgroundColor: '#1e293b', borderBottom: '1px solid #334155' }} title={f.name}>
                   {getMainFieldName(f.name)}
                   {f.isKey && <span style={{ color: '#facc15', marginLeft: '3px' }}>*</span>}
                 </th>
@@ -844,21 +862,20 @@ export default function TempDataTab({ onError, onOpenPrintModal }) {
             ) : (
               filteredItems.map((row, rowIdx) => {
                 const isSelected = selectedIds.has(row.id || row[keyField]);
+                const rowBg = isSelected
+                  ? 'rgba(2, 132, 199, 0.15)'
+                  : (rowIdx % 2 === 0 ? '#0f172a' : '#141e30');
                 return (
                   <tr
                     key={row.id || row[keyField] || `row_${rowIdx}`}
                     style={{
-                      borderBottom: '1px solid #1e293b',
-                      backgroundColor: isSelected 
-                        ? 'rgba(2, 132, 199, 0.15)' 
-                        : (rowIdx % 2 === 0 ? '#0f172a' : '#141e30'),
+                      backgroundColor: rowBg,
                       userSelect: 'none',
-                      WebkitUserSelect: 'none',
-                      transition: 'background-color 0.15s'
+                      WebkitUserSelect: 'none'
                     }}
                   >
                     {/* 1. 체크박스 (명시적 선택) */}
-                    <td style={{ padding: '6px 8px', textAlign: 'center' }} onClick={e => e.stopPropagation()}>
+                    <td style={{ padding: '6px 8px', textAlign: 'center', borderBottom: '1px solid #1e293b' }} onClick={e => e.stopPropagation()}>
                       <button
                         onClick={(e) => handleToggleSelectRow(row.id || row[keyField], e)}
                         style={{ background: 'none', border: 'none', color: isSelected ? '#38bdf8' : '#64748b', cursor: 'pointer' }}
@@ -869,7 +886,7 @@ export default function TempDataTab({ onError, onOpenPrintModal }) {
                     </td>
 
                     {/* 2. 관리 (명시적 편집/삭제 버튼) */}
-                    <td style={{ padding: '6px 8px', textAlign: 'center', whiteSpace: 'nowrap' }} onClick={e => e.stopPropagation()}>
+                    <td style={{ padding: '6px 8px', textAlign: 'center', whiteSpace: 'nowrap', borderBottom: '1px solid #1e293b' }} onClick={e => e.stopPropagation()}>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
                         <button
                           onClick={(e) => {
@@ -903,7 +920,7 @@ export default function TempDataTab({ onError, onOpenPrintModal }) {
                         <td
                           key={f.id}
                           onMouseDown={(e) => handleCellMouseDown(rowIdx, colIdx, e)}
-                          onMouseEnter={() => handleCellMouseEnter(rowIdx, colIdx)}
+                          onMouseEnter={(e) => handleCellMouseEnter(rowIdx, colIdx, e)}
                           style={{
                             padding: '6px 8px',
                             color: f.isKey ? '#facc15' : '#cbd5e1',
@@ -913,8 +930,9 @@ export default function TempDataTab({ onError, onOpenPrintModal }) {
                             cursor: 'cell',
                             userSelect: 'none',
                             WebkitUserSelect: 'none',
+                            borderBottom: '1px solid #1e293b',
                             backgroundColor: inSelection ? 'rgba(2, 132, 199, 0.35)' : 'transparent',
-                            outline: inSelection ? '1px solid #38bdf8' : 'none'
+                            boxShadow: inSelection ? 'inset 0 0 0 1px #38bdf8' : 'none'
                           }}
                         >
                           {cellVal || '-'}

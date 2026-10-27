@@ -64,11 +64,23 @@ export default function App() {
 
   const [refreshKey, setRefreshKey] = useState(0);
 
-  // ⭐️ 에이전트 실시간 상태 및 버전 주기적 감지 (10초 주기)
+  // ⭐️ 에이전트 실시간 상태 및 버전 주기적 감지 (10초 주기 - 상태 변경 시에만 리렌더링)
   useEffect(() => {
     const pollAgent = async () => {
       const status = await checkAgentLiveStatus();
-      setAgentStatus(status);
+      setAgentStatus(prev => {
+        if (
+          prev &&
+          prev.online === status.online &&
+          prev.version === status.version &&
+          prev.requiredVersion === status.requiredVersion &&
+          prev.isOutdated === status.isOutdated &&
+          prev.agentId === status.agentId
+        ) {
+          return prev;
+        }
+        return status;
+      });
     };
     pollAgent();
     const interval = setInterval(pollAgent, 10000);
